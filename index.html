@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elumalayan Garments — Contemporary Clothing & Fine Tailoring</title>
+  <meta name="description" content="Discover premium clothing, tailored coats, and fine garments from Elumalayan Garments, Salem, Tamil Nadu, India." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              black: '#09090b',
+              white: '#ffffff',
+              sand: '#fafaf9',
+              border: '#e4e4e7',
+              muted: '#71717a'
+            }
+          },
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="bg-[#fafaf9] text-zinc-900 selection:bg-zinc-900 selection:text-white flex flex-col min-h-screen">
+
+  <!-- 1. ANNOUNCEMENT BAR -->
+  <aside id="announcement-bar" aria-label="Announcement" class="announcement-bar-festive bg-zinc-900 text-zinc-300 text-[11px] uppercase tracking-widest py-2.5 px-4 text-center border-b border-zinc-800 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-3">
+      <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+      <span id="announcement-text" class="font-medium">Autumn/Winter 2026 Capsule Released — Complimentary Express Delivery Across India on Orders Over ₹1,500</span>
+    </div>
+  </aside>
+
+  <!-- 2. LUXURY STICKY NAVIGATION -->
+  <header class="sticky top-0 z-40 glass-nav border-b border-zinc-200/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Mobile Hamburger Button -->
+      <button 
+        onclick="App.toggleMobileMenu()" 
+        aria-label="Toggle navigation menu"
+        class="lg:hidden p-2 text-zinc-800 hover:text-zinc-600 focus:outline-none"
+      >
+        <svg class="w-6 h-6 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+
+      <!-- Desktop Navigation Links (Left) -->
+      <nav class="hidden lg:flex items-center gap-8 text-[12px] uppercase tracking-[0.18em] font-medium text-zinc-600">
+        <a href="#hero" class="hover:text-zinc-900 transition-colors">Home</a>
+        <a href="#catalog-section" onclick="App.setCategory('All')" class="hover:text-zinc-900 transition-colors">Catalog</a>
+        <a href="#catalog-section" onclick="App.setCategory('Outerwear')" class="hover:text-zinc-900 transition-colors">New Arrivals</a>
+        <a href="#collections" class="hover:text-zinc-900 transition-colors">Collections</a>
+        <a href="#contact" class="hover:text-zinc-900 transition-colors">Contact</a>
+      </nav>
+
+      <!-- Brand Logo / Name (Center) -->
+      <div class="text-center flex flex-col items-center">
+        <a href="#" class="inline-block focus:outline-none">
+          <span class="store-name-text font-serif-editorial text-2xl sm:text-3xl tracking-[-0.02em] font-semibold text-zinc-950 uppercase block">
+            ELUMALAYAN GARMENTS
+          </span>
+          <span class="hidden sm:block text-[9px] uppercase tracking-[0.25em] text-zinc-400 -mt-1 font-sans">
+            Salem, Tamil Nadu
+          </span>
+        </a>
+        <div id="store-festive-badge" class="hidden mt-1 festive-pill"></div>
+      </div>
+
+      <!-- Action Icons (Right) -->
+      <div class="flex items-center gap-3 sm:gap-5">
+        
+        <!-- Instagram Link -->
+        <a href="https://instagram.com" target="_blank" class="instagram-link p-2 text-zinc-700 hover:text-zinc-950 transition-colors" title="Follow us on Instagram">
+          <svg class="w-5 h-5 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+          </svg>
+        </a>
+
+        <!-- Direct WhatsApp Concierge -->
+        <a href="#" class="whatsapp-link p-2 text-zinc-700 hover:text-emerald-700 transition-colors" title="Chat with Atelier Concierge via WhatsApp">
+          <svg class="w-5 h-5 fill-current text-zinc-800 hover:text-emerald-600 transition-colors" viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+          </svg>
+        </a>
+
+        <!-- Shopping Bag Trigger with Counter -->
+        <button 
+          onclick="App.openCart()" 
+          class="relative p-2 text-zinc-800 hover:text-zinc-600 transition-colors focus:outline-none flex items-center"
+          title="View Shopping Bag"
+        >
+          <svg class="w-6 h-6 stroke-[1.4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25c-.669 0-1.188-.578-1.119-1.243l1.263-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          <span class="cart-count-badge hidden absolute -top-0.5 -right-0.5 bg-zinc-900 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+            0
+          </span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- 3. MOBILE SLIDE-OUT MENU -->
+  <div id="mobile-drawer" class="hidden fixed inset-0 z-50 flex">
+    <div id="mobile-drawer-backdrop" onclick="App.closeMobileMenu()" class="fixed inset-0 drawer-backdrop opacity-0"></div>
+    <div id="mobile-drawer-panel" class="relative w-4/5 max-w-sm bg-white h-full shadow-2xl z-10 flex flex-col justify-between p-6 -translate-x-full transition-all duration-300">
+      <div>
+        <div class="flex items-center justify-between pb-6 border-b border-zinc-100">
+          <span class="store-name-text font-serif-editorial text-xl font-bold tracking-tight text-zinc-950 uppercase">
+            MUSE ATELIER
+          </span>
+          <button onclick="App.closeMobileMenu()" class="p-1 text-zinc-400 hover:text-zinc-900">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <nav class="flex flex-col gap-4 py-8 text-sm uppercase tracking-widest font-medium text-zinc-800">
+          <a href="#hero" onclick="App.closeMobileMenu()" class="hover:text-zinc-500 py-1">Home</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('All');" class="hover:text-zinc-500 py-1">Explore Catalog</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Outerwear');" class="hover:text-zinc-500 py-1">Outerwear</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Tailoring');" class="hover:text-zinc-500 py-1">Tailoring</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Dresses');" class="hover:text-zinc-500 py-1">Dresses</a>
+          <a href="#collections" onclick="App.closeMobileMenu()" class="hover:text-zinc-500 py-1">Collections</a>
+          <a href="#contact" onclick="App.closeMobileMenu()" class="hover:text-zinc-500 py-1">Contact & Showroom</a>
+        </nav>
+      </div>
+
+      <div class="pt-6 border-t border-zinc-100 flex flex-col gap-3">
+        <a href="#" class="whatsapp-link flex items-center justify-center gap-2 bg-emerald-600 text-white text-xs py-3 font-semibold uppercase tracking-wider">
+          <span>Order via WhatsApp</span>
+        </a>
+        <a href="admin.html" class="text-center text-[11px] text-zinc-400 hover:text-zinc-900 py-2 uppercase tracking-widest">
+          Staff Portal Login
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main class="flex-grow">
+    
+    <!-- 4. HERO SECTION (EDITORIAL & LARGE ATTRACTIVE IMAGERY) -->
+    <section id="hero" class="relative bg-zinc-950 text-white overflow-hidden min-h-[82vh] lg:min-h-[88vh] flex items-center">
+      <!-- Background Editorial Photography with subtle parallax/cover -->
+      <div class="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85" 
+          alt="Luxury high-fashion autumn coat" 
+          class="w-full h-full object-cover object-center brightness-[0.72] contrast-[1.05]"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/30"></div>
+      </div>
+
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 w-full">
+        <div class="max-w-2xl">
+          <!-- Capsule Pill -->
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[11px] uppercase tracking-[0.2em] font-medium text-white mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-200"></span>
+            Autumn / Winter 2026 Capsule
+          </div>
+
+          <!-- Main Editorial Headline -->
+          <h1 class="hero-headline font-serif-editorial text-4xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-[1.06] mb-6 text-white drop-shadow-sm">
+            Elegance in Every <span class="italic font-normal">Silhouette.</span>
+          </h1>
+
+          <p class="store-tagline-text text-base sm:text-lg text-zinc-300 font-light leading-relaxed mb-10 max-w-xl">
+            Contemporary minimalist tailoring and cashmere coats engineered with regenerative noble fibers for modern living.
+          </p>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a 
+              href="#catalog-section" 
+              class="btn-primary-luxury bg-white text-zinc-950 hover:bg-zinc-200 border-white text-xs px-8 py-4 tracking-[0.16em]"
+            >
+              Shop Collection
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
+              </svg>
+            </a>
+            
+            <a 
+              href="#collections" 
+              class="btn-secondary-luxury text-white border-white/40 hover:bg-white/10 text-xs px-8 py-4 tracking-[0.16em]"
+            >
+              Explore Lookbook
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. VALUE PROPOSITION BAR -->
+    <section class="border-b border-zinc-200 bg-white py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-zinc-100">
+        <div class="pt-3 md:pt-0 px-4">
+          <p class="text-xs uppercase tracking-widest font-semibold text-zinc-900">Noble Fibers</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Cashmere, silk & certified virgin wool</p>
+        </div>
+        <div class="pt-3 md:pt-0 px-4">
+          <p class="text-xs uppercase tracking-widest font-semibold text-zinc-900">Complimentary Delivery</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Express delivery across India on orders over ₹1,500</p>
+        </div>
+        <div class="pt-3 md:pt-0 px-4">
+          <p class="text-xs uppercase tracking-widest font-semibold text-zinc-900">Concierge Service</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Direct bespoke WhatsApp support</p>
+        </div>
+        <div class="pt-3 md:pt-0 px-4">
+          <p class="text-xs uppercase tracking-widest font-semibold text-zinc-900">Artisanal Tailoring</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Precision cut in certified European ateliers</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. PRODUCT CATALOG & 4 MAIN CATEGORIES -->
+    <section id="catalog-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      
+      <!-- Section Header -->
+      <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+        <span class="text-xs uppercase tracking-[0.25em] text-zinc-400 font-semibold block mb-2">The Atelier Archive</span>
+        <h2 class="font-serif-editorial text-3xl sm:text-5xl lg:text-6xl text-zinc-900 tracking-tight font-light">
+          Four Core Disciplines
+        </h2>
+        <p class="text-sm text-zinc-500 font-light mt-3 max-w-xl mx-auto leading-relaxed">
+          Select any of our four foundational garment categories below to browse its complete archive of bespoke designs.
+        </p>
+      </div>
+
+      <!-- 1. The 4 Main Category Cards Grid -->
+      <div id="main-categories-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-16">
+        <!-- Rendered dynamically by App.renderMainCategories() -->
+      </div>
+
+      <!-- 2. Active Category Showcase & Horizontal Design Slider -->
+      <div id="category-showcase-container" class="pt-8 border-t border-zinc-200">
+        <!-- Rendered dynamically by App.renderCategoryShowcase() -->
+      </div>
+    </section>
+
+    <!-- 7. LOOKBOOK / EDITORIAL SPOTLIGHT -->
+    <section id="collections" class="bg-zinc-900 text-white py-20 lg:py-32">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-xl mx-auto mb-16">
+          <span class="text-xs uppercase tracking-[0.25em] text-zinc-400 font-semibold block mb-2">Editorial Series</span>
+          <h2 class="font-serif-editorial text-3xl sm:text-5xl font-light tracking-tight">
+            The Atelier Capsule
+          </h2>
+          <p class="text-zinc-400 text-sm mt-3 font-light">
+            Designed for those who appreciate understated luxury, precision tailoring, and monochromatic balance.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Capsule Card 1 -->
+          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Tailoring'); App.scrollToCatalog();">
+            <img 
+              src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=85" 
+              alt="Monochrome Tailoring" 
+              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-90"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
+              <span class="text-[10px] uppercase tracking-widest text-zinc-300 font-semibold mb-1">Look 01</span>
+              <h3 class="font-serif-editorial text-2xl text-white">Monochrome Tailoring</h3>
+              <p class="text-xs text-zinc-400 mt-1">Structured shoulders and Italian wool fabrics.</p>
+            </div>
+          </div>
+
+          <!-- Capsule Card 2 -->
+          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Outerwear'); App.scrollToCatalog();">
+            <img 
+              src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=85" 
+              alt="Cashmere Silhouettes" 
+              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-90"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
+              <span class="text-[10px] uppercase tracking-widest text-zinc-300 font-semibold mb-1">Look 02</span>
+              <h3 class="font-serif-editorial text-2xl text-white">Cashmere Silhouettes</h3>
+              <p class="text-xs text-zinc-400 mt-1">Cocoon volumes and hand-stitched seams.</p>
+            </div>
+          </div>
+
+          <!-- Capsule Card 3 -->
+          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Dresses'); App.scrollToCatalog();">
+            <img 
+              src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=85" 
+              alt="Silk Eveningwear" 
+              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-90"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
+              <span class="text-[10px] uppercase tracking-widest text-zinc-300 font-semibold mb-1">Look 03</span>
+              <h3 class="font-serif-editorial text-2xl text-white">Pure Silk Charmeuse</h3>
+              <p class="text-xs text-zinc-400 mt-1">Bias-cut drape for effortless grace.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. DIRECT WHATSAPP CONCIERGE & CONTACT SECTION -->
+    <section id="contact" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+        
+        <!-- Contact Information & WhatsApp Highlight -->
+        <div class="lg:col-span-5 flex flex-col justify-between">
+          <div>
+            <span class="text-xs uppercase tracking-[0.25em] text-zinc-400 font-semibold block mb-2">Bespoke Concierge</span>
+            <h2 class="font-serif-editorial text-3xl sm:text-5xl text-zinc-900 tracking-tight font-light mb-6">
+              Connect With Our Atelier
+            </h2>
+            <p class="text-sm text-zinc-600 leading-relaxed font-light mb-8">
+              Whether you require sizing guidance, bespoke styling advice, or prefer ordering directly via WhatsApp, our dedicated concierge team is at your disposal.
+            </p>
+
+            <!-- WhatsApp Action Banner -->
+            <div class="p-6 bg-zinc-900 text-white rounded-none mb-8">
+              <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-serif-editorial text-xl text-white">Instant WhatsApp Order</h4>
+                  <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
+                    Chat live with a specialist to verify stock, customize sizes, or order directly.
+                  </p>
+                  <a href="#" class="whatsapp-link mt-4 inline-flex items-center gap-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 uppercase tracking-widest">
+                    <span>Open WhatsApp Chat</span>
+                    <span>→</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Atelier Address & Hours -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs text-zinc-600">
+              <div>
+                <p class="font-semibold uppercase tracking-wider text-zinc-900 mb-1">Store & Showroom Address</p>
+                <p id="store-address-display">Elumalayan Garments<br>97/12 D, Alraj St,<br>Swaminathapuram,<br>Salem – 636009,<br>Tamil Nadu, India.</p>
+              </div>
+              <div>
+                <p class="font-semibold uppercase tracking-wider text-zinc-900 mb-1">Store Hours</p>
+                <p id="store-hours-display">Mon – Sat: 09:30 – 21:00<br>Sun: 10:00 – 20:00</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inquiry Form -->
+        <div class="lg:col-span-7 bg-white p-8 sm:p-12 border border-zinc-200">
+          <h3 class="font-serif-editorial text-2xl text-zinc-900 mb-2">Send an Atelier Inquiry</h3>
+          <p class="text-xs text-zinc-500 mb-8">We endeavor to reply to all sartorial inquiries within four hours.</p>
+
+          <form onsubmit="App.handleContactSubmit(event)" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-xs uppercase tracking-wider font-medium text-zinc-700 mb-2">Your Name *</label>
+                <input 
+                  type="text" 
+                  required 
+                  placeholder="e.g. Eleanor Vance" 
+                  class="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-900 transition-colors"
+                />
+              </div>
+              <div>
+                <label class="block text-xs uppercase tracking-wider font-medium text-zinc-700 mb-2">Email Address *</label>
+                <input 
+                  type="email" 
+                  required 
+                  placeholder="eleanor@example.com" 
+                  class="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-900 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-xs uppercase tracking-wider font-medium text-zinc-700 mb-2">Subject</label>
+                <select class="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-900 transition-colors">
+                  <option>Bespoke Sizing Advice</option>
+                  <option>Order & Delivery Inquiry</option>
+                  <option>Private Showroom Appointment</option>
+                  <option>Press & Editorial Collaboration</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs uppercase tracking-wider font-medium text-zinc-700 mb-2">Phone / WhatsApp</label>
+                <input 
+                  type="tel" 
+                  placeholder="+1 (555) 000-0000" 
+                  class="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-900 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs uppercase tracking-wider font-medium text-zinc-700 mb-2">Message *</label>
+              <textarea 
+                rows="4" 
+                required 
+                placeholder="How may our concierge assist your selection?" 
+                class="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-900 transition-colors"
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary-luxury w-full sm:w-auto text-xs py-3.5 px-8">
+              Transmit Inquiry
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 9. FLOATING WHATSAPP CONCIERGE BUTTON (PULSATING) -->
+  <a 
+    href="#" 
+    class="whatsapp-link fixed bottom-6 right-6 z-30 whatsapp-pulse bg-emerald-600 hover:bg-emerald-700 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300"
+    title="Chat with WhatsApp Concierge"
+  >
+    <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24">
+      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+    </svg>
+  </a>
+
+  <!-- 10. PRODUCT DETAIL MODAL (FULL INTERACTIVE PRODUCT VIEW) -->
+  <div id="product-detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 modal-backdrop transition-opacity" onclick="App.closeProductModal()"></div>
+    
+    <!-- Modal Dialog -->
+    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+      <div class="relative bg-white w-full max-w-4xl p-6 sm:p-10 shadow-2xl modal-content-anim z-10 border border-zinc-200">
+        
+        <!-- Close Button -->
+        <button 
+          onclick="App.closeProductModal()" 
+          class="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-950 transition-colors z-20 focus:outline-none"
+        >
+          <svg class="w-6 h-6 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Dynamic Product Content Container -->
+        <div id="product-detail-content">
+          <!-- Populated by App.openProductModal() -->
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 10B. CUSTOMER INFORMATION & WHATSAPP CHECKOUT MODAL -->
+  <div id="customer-info-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 modal-backdrop transition-opacity" onclick="App.closeCustomerModal()"></div>
+
+    <!-- Modal Dialog -->
+    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+      <div class="relative bg-white w-full max-w-lg p-6 sm:p-8 shadow-2xl modal-content-anim z-10 border border-zinc-200">
+        
+        <!-- Close Button -->
+        <button 
+          type="button"
+          onclick="App.closeCustomerModal()" 
+          class="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-950 transition-colors z-20 focus:outline-none"
+          title="Close"
+        >
+          <svg class="w-5 h-5 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Header -->
+        <div class="mb-6 pb-4 border-b border-zinc-100">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="text-[10px] uppercase tracking-[0.2em] text-zinc-400 font-semibold">Customer Identification</span>
+          </div>
+          <h3 class="font-serif-editorial text-2xl sm:text-3xl text-zinc-950 font-normal">
+            Order & Contact Details
+          </h3>
+          <p class="text-xs text-zinc-500 mt-1 font-light">
+            Optional contact details for order coordination via WhatsApp concierge.
+          </p>
+          <!-- Privacy & Purpose Explanation -->
+          <div class="mt-3 p-3 bg-zinc-50 border border-zinc-200 text-[11px] text-zinc-600 leading-relaxed space-y-1">
+            <div class="flex items-center gap-1.5 font-semibold text-zinc-900">
+              <svg class="w-3.5 h-3.5 text-zinc-700 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+              </svg>
+              <span>Why we request contact information:</span>
+            </div>
+            <p>Your details are used solely to confirm size and fit with our Salem showroom concierge and dispatch your order. We never send marketing spam, charge hidden fees, or sell personal data. You may freely browse without ever providing a number.</p>
+          </div>
+        </div>
+
+        <!-- Order Summary Preview Pill -->
+        <div id="customer-modal-order-summary" class="mb-5 p-3 bg-zinc-50 border border-zinc-200 text-xs flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-zinc-500 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25c-.669 0-1.188-.578-1.119-1.243l1.263-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+            </svg>
+            <span id="cust-modal-items-count" class="font-medium text-zinc-800">1 Item</span>
+          </div>
+          <span id="cust-modal-total-price" class="font-serif-editorial text-base font-semibold text-zinc-950">₹0</span>
+        </div>
+
+        <!-- Alert Notification Box -->
+        <div id="customer-form-alert" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium rounded-none flex items-start gap-2">
+          <svg class="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span id="customer-form-alert-msg" class="flex-1">Please fill in all required fields correctly.</span>
+        </div>
+
+        <!-- Form -->
+        <form id="customer-checkout-form" onsubmit="App.handleCustomerFormSubmit(event)" novalidate class="space-y-4">
+          
+          <!-- Full Name -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-800 mb-1">
+              Full Name <span class="text-rose-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="cust-name" 
+              required
+              placeholder="e.g. Aarav Sharma" 
+              class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950 transition-colors"
+              oninput="App.clearFieldError('cust-name')"
+            />
+            <p id="cust-name-error" class="hidden validation-error-msg"></p>
+          </div>
+
+          <!-- Mobile Number (10-digit Indian Number) -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-800 mb-1">
+              Mobile Number (Indian 10-Digit) <span class="text-rose-500">*</span>
+            </label>
+            <div class="flex">
+              <span class="inline-flex items-center px-3 bg-zinc-100 border border-r-0 border-zinc-200 text-xs font-semibold text-zinc-700 select-none">
+                🇮🇳 +91
+              </span>
+              <input 
+                type="tel" 
+                id="cust-mobile" 
+                required
+                maxlength="14"
+                placeholder="9876543210" 
+                class="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950 transition-colors"
+                oninput="App.handleMobileInput(this.value)"
+              />
+            </div>
+            <p class="text-[10px] text-zinc-400 mt-1">Enter valid 10-digit Indian mobile number (e.g. 9876543210)</p>
+            <p id="cust-mobile-error" class="hidden validation-error-msg"></p>
+          </div>
+
+          <!-- WhatsApp Number (Supports +91 format) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-800">
+                WhatsApp Number <span class="text-rose-500">*</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-xs text-zinc-600 cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  id="cust-same-as-mobile" 
+                  onchange="App.handleSameAsMobileToggle(this.checked)" 
+                  class="rounded border-zinc-300 text-zinc-900 focus:ring-0" 
+                />
+                <span class="text-[11px] font-medium text-zinc-600">Same as Mobile</span>
+              </label>
+            </div>
+            <input 
+              type="tel" 
+              id="cust-whatsapp" 
+              required
+              placeholder="+91 9876543210" 
+              class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950 transition-colors"
+              oninput="App.clearFieldError('cust-whatsapp')"
+            />
+            <p class="text-[10px] text-zinc-400 mt-1">Supports +91 format or 10-digit mobile number</p>
+            <p id="cust-whatsapp-error" class="hidden validation-error-msg"></p>
+          </div>
+
+          <!-- Optional Email -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-800 mb-1">
+              Email Address <span class="text-zinc-400 font-normal">(Optional)</span>
+            </label>
+            <input 
+              type="email" 
+              id="cust-email" 
+              placeholder="e.g. aarav@example.com (optional)" 
+              class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950 transition-colors"
+              oninput="App.clearFieldError('cust-email')"
+            />
+            <p id="cust-email-error" class="hidden validation-error-msg"></p>
+          </div>
+
+          <!-- Delivery Address (Optional for now) -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-800 mb-1">
+              Delivery Address <span class="text-zinc-400 font-normal">(Optional for now)</span>
+            </label>
+            <textarea 
+              id="cust-address" 
+              rows="2"
+              placeholder="House/Flat No., Street, Landmark, City, State, PIN Code (optional for now)" 
+              class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950 transition-colors"
+            ></textarea>
+            <p class="text-[10px] text-zinc-400 mt-0.5">Optional for now. You can also confirm your delivery address directly on WhatsApp.</p>
+          </div>
+
+          <!-- Consent & Save Details -->
+          <div class="pt-1 space-y-2">
+            <label class="inline-flex items-center gap-2 text-xs text-zinc-700 cursor-pointer select-none">
+              <input type="checkbox" id="cust-consent-check" checked class="rounded border-zinc-300 text-zinc-900 focus:ring-0" />
+              <span>I consent to Elumalayan Garments contacting me regarding this order.</span>
+            </label>
+            <label class="inline-flex items-center gap-2 text-xs text-zinc-500 cursor-pointer select-none">
+              <input type="checkbox" id="cust-save-details" checked class="rounded border-zinc-300 text-zinc-900 focus:ring-0" />
+              <span>Remember my details on this device for future orders</span>
+            </label>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-4 space-y-3 border-t border-zinc-100">
+            <div class="flex items-center gap-3">
+              <button 
+                type="button" 
+                onclick="App.closeCustomerModal()" 
+                class="btn-secondary-luxury py-3.5 px-5 text-xs font-semibold uppercase tracking-wider"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                class="flex-1 btn-primary-luxury py-3.5 text-xs font-semibold uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm"
+              >
+                <svg class="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                </svg>
+                <span>Send Order with Details</span>
+              </button>
+            </div>
+
+            <!-- Clearly Visible Skip Button -->
+            <button 
+              type="button" 
+              id="cust-skip-to-whatsapp-btn"
+              onclick="App.skipCustomerModalToWhatsApp()" 
+              class="w-full py-2.5 px-4 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 hover:text-zinc-950 border border-dashed border-zinc-300 text-xs font-medium tracking-wider uppercase flex items-center justify-center gap-2 transition-colors"
+            >
+              <span>Skip Contact Details & Chat Directly on WhatsApp →</span>
+            </button>
+            <p class="text-[10px] text-zinc-400 text-center font-light">
+              Browsing is always unrestricted. Skipping sends your chosen garments to WhatsApp without asking for personal information.
+            </p>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       10C. MULTI-WHATSAPP ORDER DISPATCH MODAL
+       ========================================== -->
+  <div id="order-dispatch-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 modal-backdrop transition-opacity" onclick="App.closeOrderDispatchModal()"></div>
+
+    <!-- Modal Dialog -->
+    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+      <div class="relative bg-white w-full max-w-lg p-6 sm:p-8 shadow-2xl modal-content-anim z-10 border border-zinc-200">
+        
+        <!-- Close Button -->
+        <button 
+          type="button" 
+          onclick="App.closeOrderDispatchModal()" 
+          class="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-950 transition-colors z-20 focus:outline-none"
+          title="Close"
+        >
+          <svg class="w-6 h-6 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Header -->
+        <div class="mb-5 pb-4 border-b border-zinc-100">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[10px] uppercase tracking-[0.2em] text-emerald-800 font-semibold">Order Saved in Store System</span>
+          </div>
+          <h3 class="font-serif-editorial text-2xl sm:text-3xl text-zinc-950 font-normal">
+            Dispatch via WhatsApp
+          </h3>
+          <p class="text-xs text-zinc-500 mt-1 font-light leading-relaxed">
+            Your order <strong id="dispatch-modal-order-id" class="text-zinc-900 font-mono">#ord-XXXX</strong> is registered in our database. Tap the contacts below to send your prefilled order summary to our store team.
+          </p>
+        </div>
+
+        <!-- Order Summary Snapshot Pill -->
+        <div class="p-3.5 bg-zinc-50 border border-zinc-200 text-xs mb-5 flex items-center justify-between">
+          <div>
+            <span class="text-zinc-400 text-[10px] uppercase tracking-wider block font-semibold">Customer</span>
+            <span id="dispatch-customer-name" class="font-medium text-zinc-900 truncate">Customer Name</span>
+          </div>
+          <div class="text-right">
+            <span class="text-zinc-400 text-[10px] uppercase tracking-wider block font-semibold">Total Amount</span>
+            <span id="dispatch-total-amount" class="font-serif-editorial text-lg font-semibold text-zinc-950">₹0</span>
+          </div>
+        </div>
+
+        <!-- Contact Stepper Notice -->
+        <div class="p-3 bg-amber-50 border border-amber-200/80 text-[11px] text-amber-800 mb-4 flex items-start gap-2.5">
+          <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <span>WhatsApp opens one conversation at a time. Tap each contact below and tap <strong>Send</strong> in WhatsApp.</span>
+          </div>
+        </div>
+
+        <!-- Progress Tracker Bar -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between text-[11px] mb-1.5">
+            <span class="text-zinc-500 font-medium">WhatsApp Dispatch Progress</span>
+            <span id="dispatch-progress-text" class="font-semibold text-emerald-700">0 of 0 Sent</span>
+          </div>
+          <div class="w-full bg-zinc-100 h-1.5 rounded-full overflow-hidden">
+            <div id="dispatch-progress-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- WhatsApp Contact Buttons List -->
+        <div id="dispatch-contacts-container" class="space-y-3 mb-6">
+          <!-- Rendered dynamically by App.openOrderDispatchModal() -->
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex items-center justify-between pt-4 border-t border-zinc-100 gap-3">
+          <button 
+            type="button" 
+            onclick="App.copyOrderSummaryToClipboard()" 
+            class="btn-secondary-luxury py-3 px-4 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5"
+            id="dispatch-copy-btn"
+          >
+            <svg class="w-4 h-4 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v2.25A2.25 2.25 0 0113.5 21.75h-7.5A2.25 2.25 0 013.75 19.5V7.5a2.25 2.25 0 012.25-2.25h2.25m4.5 0h4.5a2.25 2.25 0 012.25 2.25v12a2.25 2.25 0 01-2.25 2.25h-4.5m0-16.5A2.25 2.25 0 0013.5 3h-4.5A2.25 2.25 0 006.75 5.25" />
+            </svg>
+            <span id="dispatch-copy-btn-text">Copy Summary</span>
+          </button>
+
+          <button 
+            type="button" 
+            onclick="App.closeOrderDispatchModal()" 
+            class="btn-primary-luxury py-3 px-6 text-xs font-semibold uppercase tracking-widest"
+          >
+            Done / Continue Shopping
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. SHOPPING BAG DRAWER (SLIDE-OVER) -->
+  <div id="cart-drawer" class="hidden fixed inset-0 z-50 flex justify-end">
+    <!-- Backdrop -->
+    <div id="cart-backdrop" onclick="App.closeCart()" class="fixed inset-0 drawer-backdrop opacity-0"></div>
+
+    <!-- Slide Panel -->
+    <div id="cart-panel" class="relative w-full max-w-md bg-white h-full shadow-2xl z-10 flex flex-col justify-between translate-x-full drawer-slide-right">
+      
+      <!-- Drawer Header -->
+      <div class="p-6 border-b border-zinc-200 flex items-center justify-between">
+        <div>
+          <h3 class="font-serif-editorial text-2xl text-zinc-950 font-normal">Shopping Bag</h3>
+          <p id="free-shipping-text" class="text-[11px] text-zinc-500 mt-1">Free express shipping threshold: ₹1,500</p>
+        </div>
+        <button onclick="App.closeCart()" class="p-1.5 text-zinc-400 hover:text-zinc-950 focus:outline-none">
+          <svg class="w-5 h-5 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Free Shipping Progress Bar -->
+      <div class="w-full bg-zinc-100 h-1">
+        <div id="free-shipping-progress" class="bg-zinc-900 h-1 transition-all duration-500" style="width: 0%;"></div>
+      </div>
+
+      <!-- Cart Items List (Scrollable) -->
+      <div id="cart-drawer-items" class="flex-1 overflow-y-auto p-6 divide-y divide-zinc-100">
+        <!-- Rendered by CartManager -->
+      </div>
+
+      <!-- Drawer Footer -->
+      <div id="cart-drawer-footer" class="p-6 border-t border-zinc-200 bg-zinc-50 space-y-4">
+        
+        <!-- Customer Status in Drawer -->
+        <div id="cart-customer-preview" class="p-3 bg-white border border-zinc-200 text-xs">
+          <div class="flex items-center justify-between text-zinc-500">
+            <span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400">Order Contact Details</span>
+            <button onclick="App.openCustomerModal('cart')" class="text-zinc-800 underline hover:text-zinc-950 font-medium text-[11px]" id="cart-customer-action-btn">Enter Details</button>
+          </div>
+          <p id="cart-customer-summary" class="text-zinc-700 font-medium mt-1 truncate">Details will be verified before placing order</p>
+        </div>
+
+        <div class="flex justify-between items-baseline">
+          <span class="text-xs uppercase tracking-wider text-zinc-600 font-semibold">Subtotal</span>
+          <span id="cart-drawer-subtotal" class="font-serif-editorial text-2xl font-semibold text-zinc-950">₹0</span>
+        </div>
+        <p class="text-[11px] text-zinc-400 leading-tight">Taxes & shipping calculated at checkout. Orders can be completed directly through our WhatsApp concierge.</p>
+        
+        <button 
+          onclick="App.initiateCheckout()" 
+          class="w-full btn-primary-luxury py-4 text-xs font-semibold uppercase tracking-widest flex items-center justify-center gap-2"
+        >
+          <svg class="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+          </svg>
+          Checkout via WhatsApp
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 12. LUXURY FOOTER -->
+  <footer class="bg-zinc-950 text-zinc-400 pt-20 pb-12 border-t border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 pb-16 border-b border-zinc-800">
+        
+        <!-- Brand Story Column -->
+        <div class="lg:col-span-4">
+          <span class="store-name-text font-serif-editorial text-2xl font-semibold tracking-tight text-white uppercase block mb-4">
+            ELUMALAYAN GARMENTS
+          </span>
+          <p class="text-xs text-zinc-400 leading-relaxed font-light mb-6">
+            Fine tailoring, contemporary garments, and premium textiles. Dedicated craftsmanship in Salem, Tamil Nadu, India.
+          </p>
+          <div class="flex items-center gap-4 text-zinc-300">
+            <!-- Instagram -->
+            <a href="https://instagram.com" target="_blank" class="instagram-link hover:text-white transition-colors" title="Instagram">
+              <svg class="w-5 h-5 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+              </svg>
+            </a>
+            <!-- WhatsApp -->
+            <a href="#" class="whatsapp-link hover:text-emerald-400 transition-colors" title="WhatsApp Concierge">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Catalog Links -->
+        <div class="lg:col-span-2">
+          <p class="text-xs uppercase tracking-widest font-semibold text-white mb-4">Catalog</p>
+          <ul class="space-y-2 text-xs">
+            <li><a href="#catalog-section" onclick="App.setCategory('Outerwear')" class="hover:text-white transition-colors">Outerwear</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Tailoring')" class="hover:text-white transition-colors">Tailoring & Suits</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Knitwear')" class="hover:text-white transition-colors">Cashmere Knitwear</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Dresses')" class="hover:text-white transition-colors">Silk Dresses</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Essentials')" class="hover:text-white transition-colors">Essentials</a></li>
+          </ul>
+        </div>
+
+        <!-- Customer Care -->
+        <div class="lg:col-span-3">
+          <p class="text-xs uppercase tracking-widest font-semibold text-white mb-4">Concierge & Care</p>
+          <ul class="space-y-2 text-xs">
+            <li><a href="#contact" class="hover:text-white transition-colors">Complimentary Delivery</a></li>
+            <li><a href="#contact" class="hover:text-white transition-colors">Global Returns & Exchanges</a></li>
+            <li><a href="#contact" class="hover:text-white transition-colors">Atelier Sizing Guide</a></li>
+            <li><a href="#contact" class="hover:text-white transition-colors">Garment Preservation</a></li>
+            <li><span id="store-email-display" class="text-zinc-500">concierge@museatelier.com</span></li>
+          </ul>
+        </div>
+
+        <!-- Newsletter Column -->
+        <div class="lg:col-span-3">
+          <p class="text-xs uppercase tracking-widest font-semibold text-white mb-4">The Atelier Gazette</p>
+          <p class="text-xs text-zinc-400 mb-4 font-light leading-relaxed">
+            Receive private invitations to capsule previews, private sales, and sartorial essays.
+          </p>
+          <form onsubmit="event.preventDefault(); App.showToast('Thank you for subscribing to The Atelier Gazette.'); this.reset();" class="space-y-2">
+            <input 
+              type="email" 
+              required 
+              placeholder="Your email address" 
+              class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors"
+            />
+            <button type="submit" class="w-full btn-primary-luxury bg-white text-zinc-950 hover:bg-zinc-200 border-white text-xs py-2.5">
+              Subscribe
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-500 gap-4">
+        <div>
+          &copy; <span id="year-display">2026</span> <span class="store-name-text">ELUMALAYAN GARMENTS</span>. All rights reserved.
+        </div>
+        
+        <!-- Discreet Staff / Admin Link -->
+        <div class="flex items-center gap-6">
+          <a href="#hero" class="hover:text-zinc-300">Back to Top ↑</a>
+          <span class="text-zinc-700">|</span>
+          <a href="admin.html" class="text-zinc-500 hover:text-white transition-colors flex items-center gap-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            Staff Portal
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/festivals.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

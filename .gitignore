@@ -1,0 +1,5 @@
+store.db 
+store.db.backup* 
+*.pyc 
+__pycache__/ 
+.env

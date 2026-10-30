@@ -1,0 +1,438 @@
+/* ==========================================================================
+   MUSE ATELIER - LUXURY EDITORIAL STYLESHEET
+   Clean monochrome palette, refined typography, and smooth micro-interactions.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  --color-primary: #09090b;
+  --color-surface: #ffffff;
+  --color-background: #fafaf9;
+  --color-border: #e4e4e7;
+  --color-muted: #71717a;
+  --color-accent: #18181b;
+  --color-gold: #c5a880;
+}
+
+/* Base resets & typography */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-primary);
+  background-color: var(--color-background);
+  overflow-x: hidden;
+}
+
+.font-serif-editorial {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+.font-sans-ui {
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f4f4f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a1a1aa;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
+}
+
+/* Luxury transitions & interactions */
+.transition-smooth {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.img-zoom-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.img-zoom-container img {
+  transition: transform 0.85s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.img-zoom-container:hover img {
+  transform: scale(1.06);
+}
+
+/* Secondary image hover swap */
+.product-card .img-secondary {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.product-card:hover .img-secondary {
+  opacity: 1;
+}
+
+/* Glassmorphism subtle effects */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.glass-dark {
+  background: rgba(18, 18, 20, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Badges */
+.badge-luxury {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+}
+
+/* Button Luxury Styling */
+.btn-primary-luxury {
+  background-color: #09090b;
+  color: #ffffff;
+  border: 1px solid #09090b;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.9rem 2rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary-luxury:hover {
+  background-color: #27272a;
+  border-color: #27272a;
+  transform: translateY(-1px);
+}
+
+.btn-secondary-luxury {
+  background-color: transparent;
+  color: #09090b;
+  border: 1px solid #09090b;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.9rem 2rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary-luxury:hover {
+  background-color: #09090b;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 400px;
+  background: #09090b;
+  color: #fafafa;
+  border: 1px solid #27272a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  padding: 0.85rem 1.25rem;
+  border-radius: 2px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shimmer Loading Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f2 25%, #e4e4e7 50%, #f0f0f2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Floating WhatsApp Concierge Pulse */
+.whatsapp-pulse {
+  box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5);
+  animation: pulse-green 2.5s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 14px rgba(37, 211, 102, 0);
+  }
+  100% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+/* Modal Animations */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content-anim {
+  animation: modalScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Slide Drawer */
+.drawer-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  transition: opacity 0.3s ease;
+}
+
+.drawer-slide-right {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .hero-headline {
+    font-size: 2.75rem !important;
+    line-height: 1.08 !important;
+  }
+}
+
+/* Customer Form & Field Validation Styles */
+.input-invalid {
+  border-color: #f43f5e !important;
+  background-color: #fff1f2 !important;
+}
+
+.input-invalid:focus {
+  outline: none !important;
+  border-color: #e11d48 !important;
+  ring: 1px #e11d48 !important;
+}
+
+.input-valid {
+  border-color: #10b981 !important;
+}
+
+.validation-error-msg {
+  color: #e11d48;
+  font-size: 0.72rem;
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Horizontal Design Slider & Carousel */
+.carousel-track {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-item-card {
+  flex: 0 0 82%;
+  max-width: 320px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 640px) {
+  .carousel-item-card {
+    flex: 0 0 44%;
+    max-width: 340px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-item-card {
+    flex: 0 0 31%;
+    max-width: 360px;
+  }
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Category Card Hover & Active Aesthetics */
+.category-card {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+}
+
+.category-card.active-cat-card {
+  border-color: #09090b !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Admin Mobile Bottom Navigation */
+.admin-mobile-nav {
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Product Detail Gallery Styles */
+.modal-thumb-btn {
+  transition: all 0.2s ease-in-out;
+}
+.modal-thumb-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   FESTIVAL & SEASONAL THEME ACCENTS (SUBTLE LUXURY)
+   Maintains pristine monochrome apparel identity while introducing
+   understated cultural elegance and festive warmth.
+   ========================================================================== */
+
+:root {
+  --fest-accent: #09090b;
+  --fest-accent-hover: #27272a;
+  --fest-accent-bg: #fafaf9;
+  --fest-accent-border: #e4e4e7;
+  --fest-badge-bg: #18181b;
+  --fest-badge-text: #ffffff;
+  --fest-banner-bg: #09090b;
+  --fest-banner-text: #ffffff;
+  --fest-glow: rgba(0, 0, 0, 0.05);
+}
+
+/* Festive Storefront Overrides (Non-destructive) */
+html.festival-active .announcement-bar-festive {
+  background-color: var(--fest-banner-bg) !important;
+  color: var(--fest-banner-text) !important;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+html.festival-active .product-card:hover {
+  border-color: var(--fest-accent-border, #e4e4e7);
+  box-shadow: 0 12px 30px var(--fest-glow);
+}
+
+html.festival-active .category-card.active-cat-card {
+  border-color: var(--fest-accent) !important;
+}
+
+/* Festive Decorative Pill */
+.festive-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: var(--fest-badge-bg, #18181b);
+  color: var(--fest-badge-text, #ffffff);
+  border: 1px solid var(--fest-accent-border, transparent);
+  box-shadow: 0 2px 6px var(--fest-glow);
+  transition: all 0.3s ease;
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
