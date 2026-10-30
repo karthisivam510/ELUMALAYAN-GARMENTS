@@ -1,0 +1,7 @@
+services: 
+  - type: web 
+    name: elumalayan-garments 
+    env: python 
+    plan: free 
+    buildCommand: "" 
+    startCommand: python server.py

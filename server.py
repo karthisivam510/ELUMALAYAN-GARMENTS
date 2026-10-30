@@ -21,7 +21,7 @@ import webbrowser
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+PORT = int(os.environ.get('PORT', sys.argv[1] if len(sys.argv) > 1 else 8000))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, 'store.db')
 
@@ -935,3 +935,4 @@ def run_server():
 
 if __name__ == '__main__':
     run_server()
+
