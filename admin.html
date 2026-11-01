@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ELUMALAYAN GARMENTS — Atelier Studio & Management Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>ELUMALAYAN GARMENTS — Poorani Pattu Pavadai Management Console</title>
   <meta name="robots" content="noindex, nofollow" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="shortcut icon" href="assets/favicon.ico" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -49,11 +53,16 @@
       
       <!-- Studio Header -->
       <div class="text-center mb-8">
-        <span class="text-[10px] uppercase tracking-[0.25em] text-zinc-400 font-semibold block mb-2">Restricted Access</span>
-        <h1 class="font-serif-editorial text-3xl font-semibold tracking-tight text-zinc-950 uppercase">
+        <img 
+          src="assets/logo.png" 
+          alt="Poorani Pattu Pavadai" 
+          class="w-20 h-20 mx-auto mb-3 rounded-full logo-glow-pink object-cover"
+        />
+        <span class="text-[10px] uppercase tracking-[0.25em] text-zinc-400 font-semibold block mb-1">Restricted Access</span>
+        <h1 class="font-serif-editorial text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-950 uppercase">
           Elumalayan Garments
         </h1>
-        <p class="text-xs text-zinc-500 mt-2">Private management console & order fulfillment</p>
+        <p class="text-xs text-zinc-500 mt-1">Poorani Pattu Pavadai — Management Console</p>
       </div>
 
       <!-- Error Notification -->
@@ -132,17 +141,24 @@
     <aside class="w-full md:w-64 bg-zinc-950 text-white flex-shrink-0 flex flex-col justify-between border-r border-zinc-800">
       <div>
         <!-- Sidebar Brand -->
-        <div class="p-6 border-b border-zinc-800 flex items-center justify-between">
-          <div>
-            <span class="store-name-text font-serif-editorial text-xl font-bold tracking-tight text-white block uppercase">
-              ELUMALAYAN GARMENTS
-            </span>
-            <span class="text-[9px] uppercase tracking-[0.25em] text-zinc-400 block mt-0.5">
-              Admin & Concierge Portal
-            </span>
+        <div class="p-5 border-b border-zinc-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img 
+              src="assets/logo.png" 
+              alt="Poorani Pattu Pavadai" 
+              class="w-10 h-10 rounded-full logo-glow-pink object-cover flex-shrink-0"
+            />
+            <div>
+              <span class="font-serif-editorial text-lg font-bold tracking-tight text-white block uppercase leading-tight">
+                ELUMALAYAN
+              </span>
+              <span class="text-[9px] uppercase tracking-[0.2em] text-pink-300/80 block mt-0.5">
+                Poorani Pattu Pavadai
+              </span>
+            </div>
           </div>
           <!-- Live Status Indicator -->
-          <span class="flex h-2 w-2 relative" title="Store is Live">
+          <span class="flex h-2 w-2 relative flex-shrink-0" title="Store is Live">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
@@ -264,7 +280,12 @@
       
       <!-- Top Bar -->
       <header class="h-16 bg-white border-b border-zinc-200 px-6 sm:px-8 flex items-center justify-between">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+          <img 
+            src="assets/logo.png" 
+            alt="Poorani Pattu Pavadai" 
+            class="md:hidden w-8 h-8 rounded-full logo-glow-pink object-cover flex-shrink-0"
+          />
           <h2 id="admin-section-title" class="font-serif-editorial text-2xl font-semibold text-zinc-950">
             Atelier Dashboard
           </h2>
@@ -519,7 +540,7 @@
               <span class="text-[11px] font-light">Use ↑ ↓ buttons to reorder designs inside their category</span>
             </div>
             <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
+              <table class="w-full text-left border-collapse admin-responsive-table">
                 <thead>
                   <tr class="border-b border-zinc-200 bg-zinc-50 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
                     <th class="py-3 px-3 w-12 text-center">Order</th>
@@ -564,7 +585,7 @@
           <!-- Orders Table Container -->
           <div class="bg-white border border-zinc-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
+              <table class="w-full text-left border-collapse admin-responsive-table">
                 <thead>
                   <tr class="border-b border-zinc-200 bg-zinc-50 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
                     <th class="py-3 px-4">Order ID & Date</th>
@@ -1131,16 +1152,16 @@
   <div id="product-form-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="fixed inset-0 modal-backdrop transition-opacity" onclick="Admin.closeModal()"></div>
 
-    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
-      <div class="relative bg-white w-full max-w-3xl p-6 sm:p-10 shadow-2xl modal-content-anim z-10 border border-zinc-200">
+    <div class="min-h-screen px-2 sm:px-4 py-4 sm:py-8 flex items-center justify-center">
+      <div class="relative bg-white w-full max-w-3xl p-4 sm:p-10 shadow-2xl modal-content-anim z-10 border border-zinc-200 max-h-[92vh] overflow-y-auto">
         
         <!-- Modal Header -->
-        <div class="flex justify-between items-center pb-6 mb-6 border-b border-zinc-200">
+        <div class="flex justify-between items-center pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-zinc-200">
           <div>
             <h3 id="modal-form-title" class="font-serif-editorial text-2xl font-semibold text-zinc-950">Add New Garment</h3>
             <p class="text-xs text-zinc-500 mt-0.5">Garment details will immediately update on the public website.</p>
           </div>
-          <button onclick="Admin.closeModal()" class="p-2 text-zinc-400 hover:text-zinc-950">
+          <button onclick="Admin.closeModal()" class="modal-close-btn p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-zinc-950 transition-colors focus:outline-none" aria-label="Close modal">
             <svg class="w-6 h-6 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -1218,6 +1239,12 @@
                 Garment Photography & Gallery *
               </label>
               <div class="flex items-center gap-2">
+                <span id="photo-ready-badge" class="hidden inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded transition-all">
+                  <svg class="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <span>Photo ready</span>
+                </span>
                 <span id="gallery-total-count-badge" class="text-[10px] font-mono text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded">0 Photos</span>
                 <span id="image-dimensions-badge" class="hidden text-[10px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded"></span>
               </div>
@@ -1247,11 +1274,11 @@
             <!-- Main Upload Container Box -->
             <div id="product-image-upload-box" class="relative bg-zinc-50 border border-zinc-200 transition-all overflow-hidden">
               
-              <!-- Processing / Loading Overlay -->
+              <!-- Animated Loading Spinner & Visual Feedback Overlay -->
               <div id="image-upload-loading" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-6 text-center">
-                <div class="w-8 h-8 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin mb-3"></div>
-                <p id="image-upload-loading-text" class="text-xs font-semibold uppercase tracking-wider text-zinc-900">Optimizing Photographs...</p>
-                <p class="text-[11px] text-zinc-500 mt-1 font-light">Preserving garment aspect ratios & compressing for instant web delivery</p>
+                <div class="spinner-circular mb-3"></div>
+                <p id="image-upload-loading-text" class="text-xs font-semibold uppercase tracking-wider text-zinc-900">Optimizing & uploading image... Please wait</p>
+                <p class="text-[11px] text-zinc-500 mt-1 font-light">Auto-compressing high-resolution photo to 1200px (JPEG 82%)</p>
               </div>
 
               <!-- STATE A: EMPTY / NO IMAGES (Matches user's diagram)
@@ -1499,9 +1526,10 @@
             </button>
             <button 
               type="submit" 
-              class="btn-primary-luxury text-xs py-2.5 px-8"
+              id="form-product-submit-btn"
+              class="btn-primary-luxury text-xs py-2.5 px-8 transition-all"
             >
-              Save Garment
+              Save Product
             </button>
           </div>
 
@@ -1525,7 +1553,7 @@
             <h3 class="font-serif-editorial text-2xl font-semibold text-zinc-950">Edit Category</h3>
             <p class="text-xs text-zinc-500 mt-0.5">Updates appear across catalog cards and navigation.</p>
           </div>
-          <button onclick="Admin.closeCategoryModal()" class="p-2 text-zinc-400 hover:text-zinc-950">
+          <button onclick="Admin.closeCategoryModal()" class="modal-close-btn p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-zinc-950 transition-colors focus:outline-none" aria-label="Close modal">
             <svg class="w-6 h-6 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -1620,7 +1648,8 @@
         <button 
           type="button" 
           onclick="Admin.closeThemePreviewModal()" 
-          class="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-950 transition-colors z-20"
+          class="modal-close-btn absolute top-3 right-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-zinc-950 transition-colors z-20 focus:outline-none"
+          aria-label="Close modal"
         >
           <svg class="w-5 h-5 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

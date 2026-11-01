@@ -16,6 +16,31 @@
   --color-muted: #71717a;
   --color-accent: #18181b;
   --color-gold: #c5a880;
+
+  /* Poorani Pattu Pavadai / Elumalayan Garments Official Palette */
+  --color-brand-wine: #4A0213;
+  --color-brand-wine-dark: #1A0207;
+  --color-brand-pink: #FF4F79;
+  --color-brand-rose: #E8335E;
+}
+
+.logo-glow-pink {
+  box-shadow: 0 0 16px rgba(255, 79, 121, 0.38);
+  border: 1.5px solid rgba(255, 79, 121, 0.6);
+}
+
+.logo-glow-pink-lg {
+  box-shadow: 0 0 25px rgba(255, 79, 121, 0.45);
+  border: 2px solid rgba(255, 79, 121, 0.7);
+}
+
+.badge-wholesale {
+  background-color: #fdf2f4;
+  color: #4A0213;
+  border: 1px solid #fbcfe8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 /* Base resets & typography */
@@ -422,6 +447,166 @@ html.festival-active .category-card.active-cat-card {
   border: 1px solid var(--fest-accent-border, transparent);
   box-shadow: 0 2px 6px var(--fest-glow);
   transition: all 0.3s ease;
+}
+
+/* Circular Loading Spinner for Image Upload & Visual Feedback */
+.spinner-circular {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e4e4e7;
+  border-top-color: #09090b;
+  border-radius: 50%;
+  animation: spinnerRotate 0.75s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spinnerRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   MOBILE-FIRST UX, TOUCH ERGONOMICS & PERFORMANCE OPTIMIZATIONS
+   ========================================================================== */
+
+/* 1. Prevent Unwanted Mobile Safari & Chrome Zoom on Input Focus */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  input[type="text"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"] {
+    font-size: 16px !important;
+  }
+}
+
+/* 2. Minimum Touch Target Sizes (44px × 44px) */
+@media (pointer: coarse), (max-width: 768px) {
+  button:not(.no-min-touch),
+  .modal-close-btn,
+  .touch-target-44,
+  .whatsapp-link,
+  a.btn-primary-luxury,
+  a.btn-secondary-luxury {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 3. Native Horizontal Touch Carousel with CSS Scroll Snap */
+.modal-gallery-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.modal-gallery-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Pagination Dots (up to 10 photos) */
+.modal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #d4d4d8;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.modal-dot.active {
+  background-color: #09090b;
+  width: 20px;
+}
+
+/* 4. Responsive Garment Images & Zero Layout Shift (CLS) */
+img.responsive-garment-img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* 5. Safe Area Insets for Mobile Modals & Bottom Sticky Bar */
+.safe-area-bottom {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+#welcome-lead-modal .min-h-screen {
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+}
+
+#welcome-lead-card {
+  max-height: calc(100vh - 2.5rem - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+}
+
+/* 6. Admin Panel - Mobile Stacked Cards */
+@media (max-width: 768px) {
+  .admin-responsive-table thead {
+    display: none;
+  }
+  
+  .admin-responsive-table, 
+  .admin-responsive-table tbody, 
+  .admin-responsive-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-responsive-table tr {
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
+    margin-bottom: 0.875rem;
+    padding: 0.875rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .admin-responsive-table td {
+    display: block;
+    width: 100% !important;
+    padding: 0.25rem 0 !important;
+    border: none !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .admin-card-row-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f4f4f5;
+  }
+
+  .admin-card-row-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.6rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid #f4f4f5;
+  }
 }
 
 /* Accessibility: Respect prefers-reduced-motion */

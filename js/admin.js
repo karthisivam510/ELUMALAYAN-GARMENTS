@@ -16,107 +16,104 @@
  * - Exports high-efficiency WebP/JPEG data URLs.
  */
 const ImageOptimizer = {
-  async compress(file, maxDimension = 1600, quality = 0.88) {
+  /**
+   * Client-Side Image Compression Engine:
+   * - Max dimension: 1200px (width or height, maintaining original aspect ratio).
+   * - Export format: canvas.toDataURL('image/jpeg', 0.82).
+   * - Shrinks 5MB - 15MB photos down to ~150KB - 250KB with zero visible loss in luxury quality.
+   * - Feeds compressed Base64 string directly into product image payload.
+   */
+  async compress(file, maxDimension = 1200, quality = 0.82) {
     return new Promise((resolve, reject) => {
       if (!file) {
-        return reject(new Error('No image file provided.'));
+        return reject(new Error('Failed to load image. Please try another photo.'));
       }
       
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!validTypes.includes(file.type.toLowerCase())) {
-        return reject(new Error('Please select a valid image file (JPG, JPEG, PNG, or WebP).'));
+      const fileType = (file.type || '').toLowerCase();
+      if (fileType && !validTypes.includes(fileType)) {
+        return reject(new Error('Failed to load image. Please try another photo.'));
       }
 
-      const originalSize = file.size;
+      const originalSize = file.size || 0;
       const reader = new FileReader();
 
-      reader.onerror = () => reject(new Error('Failed to read image file from device.'));
+      reader.onerror = () => reject(new Error('Failed to load image. Please try another photo.'));
 
       reader.onload = (e) => {
         const img = new Image();
-        img.onerror = () => reject(new Error('The chosen file could not be decoded as an image.'));
+        img.onerror = () => reject(new Error('Failed to load image. Please try another photo.'));
 
         img.onload = () => {
-          let { width, height } = img;
-          const originalWidth = width;
-          const originalHeight = height;
+          try {
+            let width = img.naturalWidth || img.width;
+            let height = img.naturalHeight || img.height;
+            const originalWidth = width;
+            const originalHeight = height;
 
-          // Strictly preserve original aspect ratio
-          if (width > height) {
-            if (width > maxDimension) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
+            if (!width || !height) {
+              return reject(new Error('Failed to load image. Please try another photo.'));
             }
-          } else {
-            if (height > maxDimension) {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
+
+            // Strictly preserve original aspect ratio with max dimension of 1200px
+            if (width > height) {
+              if (width > maxDimension) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              }
+            } else {
+              if (height > maxDimension) {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
             }
-          }
 
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
 
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            return resolve({
-              dataUrl: e.target.result,
-              originalWidth,
-              originalHeight,
-              width: originalWidth,
-              height: originalHeight,
-              originalSize,
-              optimizedSize: originalSize,
-              ratioLabel: `${originalWidth} × ${originalHeight}px`,
-              savedPercent: 0
-            });
-          }
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              return reject(new Error('Failed to load image. Please try another photo.'));
+            }
 
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
-          // Apparel photography: draw onto clean backdrop (avoids black margins on transparent PNGs)
-          if (file.type === 'image/png') {
-            ctx.drawImage(img, 0, 0, width, height);
-          } else {
+            // Clean white backdrop avoids dark borders on transparent PNGs/WebPs when converting to JPEG
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
+
+            // Export format: canvas.toDataURL('image/jpeg', 0.82)
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const optimizedSize = Math.round((dataUrl.length * 3) / 4);
+
+            const savedBytes = Math.max(0, originalSize - optimizedSize);
+            const savedPercent = originalSize > 0 ? Math.round((savedBytes / originalSize) * 100) : 0;
+
+            // Clean aspect ratio label
+            const ratioVal = width / height;
+            let ratioLabel = `${width} × ${height}px`;
+            if (Math.abs(ratioVal - 0.75) < 0.05) ratioLabel += ' (3:4 Portrait)';
+            else if (Math.abs(ratioVal - 1.0) < 0.05) ratioLabel += ' (1:1 Square)';
+            else if (Math.abs(ratioVal - 0.67) < 0.05) ratioLabel += ' (2:3 Portrait)';
+
+            resolve({
+              dataUrl,
+              originalWidth,
+              originalHeight,
+              width,
+              height,
+              originalSize,
+              optimizedSize,
+              ratioLabel,
+              savedPercent
+            });
+          } catch (canvasErr) {
+            console.error('Canvas compression error:', canvasErr);
+            reject(new Error('Failed to load image. Please try another photo.'));
           }
-
-          // Use WebP if file was webp, otherwise JPEG
-          const outputMime = file.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
-          let dataUrl = canvas.toDataURL(outputMime, quality);
-          let optimizedSize = Math.round((dataUrl.length * 3) / 4);
-
-          // If original was already small & unscaled, keep original
-          if (width === originalWidth && height === originalHeight && originalSize < 150000 && originalSize < optimizedSize) {
-            dataUrl = e.target.result;
-            optimizedSize = originalSize;
-          }
-
-          const savedBytes = Math.max(0, originalSize - optimizedSize);
-          const savedPercent = originalSize > 0 ? Math.round((savedBytes / originalSize) * 100) : 0;
-
-          // Clean aspect ratio label
-          const ratioVal = width / height;
-          let ratioLabel = `${width} × ${height}px`;
-          if (Math.abs(ratioVal - 0.75) < 0.05) ratioLabel += ' (3:4 Portrait)';
-          else if (Math.abs(ratioVal - 1.0) < 0.05) ratioLabel += ' (1:1 Square)';
-          else if (Math.abs(ratioVal - 0.67) < 0.05) ratioLabel += ' (2:3 Portrait)';
-
-          resolve({
-            dataUrl,
-            originalWidth,
-            originalHeight,
-            width,
-            height,
-            originalSize,
-            optimizedSize,
-            ratioLabel,
-            savedPercent
-          });
         };
 
         img.src = e.target.result;
@@ -677,20 +674,22 @@ const Admin = {
         <tr class="border-b border-zinc-100 hover:bg-zinc-50/70 transition-colors">
           <!-- Reorder Inside Category -->
           <td class="py-3 px-3 text-center whitespace-nowrap">
-            <div class="inline-flex flex-col gap-0.5">
+            <div class="inline-flex items-center md:flex-col gap-1">
               <button 
                 onclick="Admin.moveProduct('${p.id}', 'up')" 
                 ${isFirst ? 'disabled' : ''} 
-                class="p-1 text-zinc-500 hover:text-zinc-950 disabled:opacity-20 text-[10px]"
+                class="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 p-2 md:p-1 bg-zinc-100 md:bg-transparent rounded md:rounded-none text-zinc-600 hover:text-zinc-950 disabled:opacity-20 text-xs md:text-[10px] flex items-center justify-center"
                 title="Move Design Up"
+                aria-label="Move design up"
               >
                 ▲
               </button>
               <button 
                 onclick="Admin.moveProduct('${p.id}', 'down')" 
                 ${isLast ? 'disabled' : ''} 
-                class="p-1 text-zinc-500 hover:text-zinc-950 disabled:opacity-20 text-[10px]"
+                class="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 p-2 md:p-1 bg-zinc-100 md:bg-transparent rounded md:rounded-none text-zinc-600 hover:text-zinc-950 disabled:opacity-20 text-xs md:text-[10px] flex items-center justify-center"
                 title="Move Design Down"
+                aria-label="Move design down"
               >
                 ▼
               </button>
@@ -699,13 +698,13 @@ const Admin = {
 
           <!-- Thumbnail & Photo Count (Click to open gallery editor) -->
           <td class="py-3 px-4 w-20">
-            <div class="flex flex-col items-center gap-1">
+            <div class="flex items-center md:flex-col gap-3 md:gap-1">
               <div 
                 onclick="Admin.openEditModal('${p.id}')" 
-                class="relative w-11 h-14 bg-zinc-100 border border-zinc-200 cursor-pointer group overflow-hidden shadow-2xs" 
+                class="relative w-14 h-18 md:w-11 md:h-14 bg-zinc-100 border border-zinc-200 cursor-pointer group overflow-hidden shadow-2xs flex-shrink-0" 
                 title="Click to view and manage photos in gallery"
               >
-                <img src="${(p.images && p.images[0]) || p.image}" alt="${p.name}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" />
+                <img src="${(p.images && p.images[0]) || p.image}" alt="${p.name}" loading="lazy" decoding="async" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" />
                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1">
                   <svg class="w-3.5 h-3.5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -714,7 +713,7 @@ const Admin = {
                   <span class="text-[8px] uppercase tracking-wider font-semibold">Photos</span>
                 </div>
               </div>
-              <span class="text-[9px] font-mono px-1 py-0.2 bg-zinc-100 text-zinc-600 rounded">
+              <span class="text-[9px] font-mono px-1.5 py-0.5 bg-zinc-100 text-zinc-600 rounded">
                 ${(p.images && p.images.length) || 1} Photo${(p.images && p.images.length === 1) ? '' : 's'}
               </span>
             </div>
@@ -722,8 +721,8 @@ const Admin = {
 
           <!-- Title & Details -->
           <td class="py-3 px-4">
-            <p class="font-serif-editorial text-base text-zinc-950 font-medium leading-snug">${p.name}</p>
-            <div class="flex items-center gap-2 mt-0.5">
+            <p class="font-serif-editorial text-base sm:text-lg text-zinc-950 font-medium leading-snug">${p.name}</p>
+            <div class="flex flex-wrap items-center gap-2 mt-1">
               <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">${p.category}</span>
               ${p.badge ? `<span class="text-[9px] uppercase tracking-widest px-1.5 py-0.2 bg-zinc-100 text-zinc-700 font-semibold">${p.badge}</span>` : ''}
               <span class="text-[10px] text-zinc-300 font-mono">ID: ${p.id}</span>
@@ -747,14 +746,14 @@ const Admin = {
           <td class="py-3 px-4 whitespace-nowrap">
             <button 
               onclick="Admin.toggleProductStatus('${p.id}')"
-              class="group inline-flex items-center gap-2 px-2.5 py-1 text-xs font-medium rounded-full transition-all ${
+              class="group inline-flex items-center gap-2 min-h-[44px] md:min-h-0 px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
                 p.isAvailable 
                   ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' 
                   : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
               }"
               title="Click to toggle availability on storefront"
             >
-              <span class="w-2 h-2 rounded-full ${p.isAvailable ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+              <span class="w-2.5 h-2.5 rounded-full ${p.isAvailable ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
               <span>${p.isAvailable ? 'Available' : 'Unavailable'}</span>
               <svg class="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -767,8 +766,9 @@ const Admin = {
             <div class="inline-flex items-center gap-2">
               <button 
                 onclick="Admin.openEditModal('${p.id}')" 
-                class="p-1.5 text-zinc-600 hover:text-zinc-950 transition-colors"
+                class="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 p-2 md:p-1.5 bg-zinc-100 md:bg-transparent rounded md:rounded-none text-zinc-600 hover:text-zinc-950 transition-colors flex items-center justify-center"
                 title="Edit Design"
+                aria-label="Edit Design"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -777,8 +777,9 @@ const Admin = {
 
               <button 
                 onclick="Admin.confirmDelete('${p.id}', 'product')" 
-                class="p-1.5 text-zinc-400 hover:text-rose-600 transition-colors"
+                class="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 p-2 md:p-1.5 bg-rose-50 md:bg-transparent rounded md:rounded-none text-zinc-400 hover:text-rose-600 transition-colors flex items-center justify-center"
                 title="Delete Design"
+                aria-label="Delete Design"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -1486,6 +1487,36 @@ const Admin = {
   // PRODUCT / DESIGN ADD & EDIT MODAL & SINGLE-CLICK PHOTO UPLOAD
   // ==========================================
 
+  setProductSubmitLoading(isLoading) {
+    const submitBtn = document.getElementById('form-product-submit-btn');
+    if (!submitBtn) return;
+    if (isLoading) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      submitBtn.innerHTML = '<span class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5 align-middle"></span><span>Processing Image...</span>';
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      submitBtn.innerHTML = this.editingProductId ? 'Update Product' : 'Save Product';
+    }
+  },
+
+  resetUploadBox() {
+    const fileInput = document.getElementById('form-product-file-input');
+    const replaceInput = document.getElementById('form-single-replace-file-input');
+    const quickInput = document.getElementById('table-quick-photo-input');
+    const loadingOverlay = document.getElementById('image-upload-loading');
+    const photoReadyBadge = document.getElementById('photo-ready-badge');
+
+    if (fileInput) fileInput.value = '';
+    if (replaceInput) replaceInput.value = '';
+    if (quickInput) quickInput.value = '';
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    if (photoReadyBadge) photoReadyBadge.classList.add('hidden');
+    this.setProductSubmitLoading(false);
+    this.updateGalleryView();
+  },
+
   openAddModal() {
     this.editingProductId = null;
     this.uploadedImageBase64 = null;
@@ -1496,9 +1527,19 @@ const Admin = {
     const modal = document.getElementById('product-form-modal');
     const form = document.getElementById('product-edit-form');
     const titleEl = document.getElementById('modal-form-title');
+    const submitBtn = document.getElementById('form-product-submit-btn');
+    const photoReadyBadge = document.getElementById('photo-ready-badge');
+    const loadingOverlay = document.getElementById('image-upload-loading');
 
     if (form) form.reset();
     if (titleEl) titleEl.textContent = 'Add New Garment / Design';
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      submitBtn.innerHTML = 'Save Product';
+    }
+    if (photoReadyBadge) photoReadyBadge.classList.add('hidden');
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
 
     // Populate Category Dropdown with the 4 core categories
     this.populateCategorySelect('form-product-category', this.selectedCategory !== 'All' ? this.selectedCategory : 'Outerwear & Coats');
@@ -1527,7 +1568,18 @@ const Admin = {
 
     const modal = document.getElementById('product-form-modal');
     const titleEl = document.getElementById('modal-form-title');
+    const submitBtn = document.getElementById('form-product-submit-btn');
+    const photoReadyBadge = document.getElementById('photo-ready-badge');
+    const loadingOverlay = document.getElementById('image-upload-loading');
+
     if (titleEl) titleEl.textContent = `Edit Design — ${product.name}`;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      submitBtn.innerHTML = 'Update Product';
+    }
+    if (photoReadyBadge) photoReadyBadge.classList.add('hidden');
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
 
     this.populateCategorySelect('form-product-category', product.category);
 
@@ -1565,6 +1617,7 @@ const Admin = {
     const modal = document.getElementById('product-form-modal');
     if (modal) modal.classList.add('hidden');
     document.body.style.overflow = '';
+    this.resetUploadBox();
   },
 
   populateCategorySelect(elementId, selected = 'Outerwear & Coats') {
@@ -1640,24 +1693,33 @@ const Admin = {
   async processMultipleImageFiles(files) {
     if (!files || files.length === 0) return;
 
-    // Filter valid image types
+    // Filter and validate image types
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    const imageFiles = files.filter(f => validTypes.includes(f.type.toLowerCase()));
+    const invalidFiles = files.filter(f => !validTypes.includes((f.type || '').toLowerCase()));
 
-    if (imageFiles.length === 0) {
-      this.showToast('Please select valid garment images (JPG, JPEG, PNG, or WebP).', 'error');
+    if (invalidFiles.length > 0) {
+      this.resetUploadBox();
+      alert('Failed to load image. Please try another photo.');
       return;
     }
 
     const loadingOverlay = document.getElementById('image-upload-loading');
     const loadingText = document.getElementById('image-upload-loading-text');
+    const photoReadyBadge = document.getElementById('photo-ready-badge');
 
+    // 1. Upload Trigger & Animated Loading Spinner
     if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-    if (loadingText) loadingText.textContent = `Optimizing ${imageFiles.length} photograph${imageFiles.length === 1 ? '' : 's'}...`;
+    // 2. Status Text
+    if (loadingText) loadingText.textContent = 'Optimizing & uploading image... Please wait';
+    if (photoReadyBadge) photoReadyBadge.classList.add('hidden');
+
+    // 3. Safety State: Disable "Save Product" / "Update Product" button while image is processing
+    this.setProductSubmitLoading(true);
 
     try {
+      // 4. Client-Side Image Compression with ImageOptimizer.compress (max 1200px, JPEG 0.82)
       const optimizedResults = await Promise.all(
-        imageFiles.map(file => ImageOptimizer.compress(file))
+        files.map(file => ImageOptimizer.compress(file))
       );
 
       const startIndex = this.productImages.length;
@@ -1680,12 +1742,21 @@ const Admin = {
       }
 
       this.updateGalleryView();
-      this.showToast(`Added ${imageFiles.length} photograph${imageFiles.length === 1 ? '' : 's'} to garment gallery.`, 'success');
+
+      // Success State: replace spinner with clear preview & show small green checkmark "Photo ready"
+      if (photoReadyBadge) {
+        photoReadyBadge.classList.remove('hidden');
+      }
+      this.showToast(`Added ${files.length} photograph${files.length === 1 ? '' : 's'} to garment gallery.`, 'success');
     } catch (err) {
       console.error('Image optimization failed:', err);
-      this.showToast(err.message || 'Error processing garment photographs.', 'error');
+      this.resetUploadBox();
+      alert('Failed to load image. Please try another photo.');
     } finally {
       if (loadingOverlay) loadingOverlay.classList.add('hidden');
+      this.setProductSubmitLoading(false);
+      const fileInput = document.getElementById('form-product-file-input');
+      if (fileInput) fileInput.value = '';
     }
   },
 
@@ -1960,19 +2031,36 @@ const Admin = {
 
   async handleSingleImageReplaced(e) {
     const file = e.target.files && e.target.files[0];
-    if (!file || this.replaceTargetIndex === null || this.replaceTargetIndex >= this.productImages.length) {
-      return;
-    }
-
     const targetIdx = this.replaceTargetIndex;
     this.replaceTargetIndex = null;
 
+    if (!file || targetIdx === null || targetIdx >= this.productImages.length) {
+      this.resetUploadBox();
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes((file.type || '').toLowerCase())) {
+      this.resetUploadBox();
+      alert('Failed to load image. Please try another photo.');
+      return;
+    }
+
     const loadingOverlay = document.getElementById('image-upload-loading');
     const loadingText = document.getElementById('image-upload-loading-text');
+    const photoReadyBadge = document.getElementById('photo-ready-badge');
+
+    // 1. Upload Trigger & Animated Loading Spinner
     if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-    if (loadingText) loadingText.textContent = 'Optimizing replacement photograph...';
+    // 2. Status Text
+    if (loadingText) loadingText.textContent = 'Optimizing & uploading image... Please wait';
+    if (photoReadyBadge) photoReadyBadge.classList.add('hidden');
+
+    // 3. Safety State: Disable submit button
+    this.setProductSubmitLoading(true);
 
     try {
+      // 4. Client-Side Image Compression with ImageOptimizer.compress (max 1200px, JPEG 0.82)
       const optimized = await ImageOptimizer.compress(file);
       this.productImages[targetIdx] = optimized.dataUrl;
 
@@ -1988,12 +2076,21 @@ const Admin = {
 
       this.activePreviewIndex = targetIdx;
       this.updateGalleryView();
+
+      // Success State: replace spinner with clear preview & show small green checkmark "Photo ready"
+      if (photoReadyBadge) {
+        photoReadyBadge.classList.remove('hidden');
+      }
       this.showToast('Photograph replaced successfully.', 'success');
     } catch (err) {
       console.error('Photo replacement failed:', err);
-      this.showToast(err.message || 'Error replacing photograph.', 'error');
+      this.resetUploadBox();
+      alert('Failed to load image. Please try another photo.');
     } finally {
       if (loadingOverlay) loadingOverlay.classList.add('hidden');
+      this.setProductSubmitLoading(false);
+      const replaceInput = document.getElementById('form-single-replace-file-input');
+      if (replaceInput) replaceInput.value = '';
     }
   },
 
@@ -2059,13 +2156,21 @@ const Admin = {
 
   async handleTablePhotoSelected(e) {
     const file = e.target.files && e.target.files[0];
-    if (!file || !this.quickUploadTargetProductId) return;
-
     const productId = this.quickUploadTargetProductId;
     this.quickUploadTargetProductId = null;
 
+    if (!file || !productId) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes((file.type || '').toLowerCase())) {
+      const quickInput = document.getElementById('table-quick-photo-input');
+      if (quickInput) quickInput.value = '';
+      alert('Failed to load image. Please try another photo.');
+      return;
+    }
+
     try {
-      this.showToast('Optimizing garment photograph...', 'info');
+      this.showToast('Optimizing & uploading image... Please wait', 'info');
       const optimized = await ImageOptimizer.compress(file);
 
       const prod = window.Store.getProductById(productId);
@@ -2081,10 +2186,12 @@ const Admin = {
       this.renderProductsTable();
       this.renderDashboard();
 
-      this.showToast(`Photograph updated for "${prod ? prod.name : 'garment'}"!`, 'success');
+      this.showToast(`Photo ready for "${prod ? prod.name : 'garment'}"!`, 'success');
     } catch (err) {
       console.error('Quick upload failed:', err);
-      this.showToast(err.message || 'Error uploading photograph.', 'error');
+      const quickInput = document.getElementById('table-quick-photo-input');
+      if (quickInput) quickInput.value = '';
+      alert('Failed to load image. Please try another photo.');
     }
   },
 

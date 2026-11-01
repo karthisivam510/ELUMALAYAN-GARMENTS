@@ -129,15 +129,8 @@ class CartManager {
     }
 
     if (freeShippingBar && freeShippingText) {
-      const remaining = threshold - subtotal;
-      if (remaining <= 0) {
-        freeShippingBar.style.width = '100%';
-        freeShippingText.innerHTML = `✨ <strong>Complimentary Express Delivery</strong> unlocked!`;
-      } else {
-        const pct = Math.min(100, Math.round((subtotal / threshold) * 100));
-        freeShippingBar.style.width = `${pct}%`;
-        freeShippingText.innerHTML = `Add <strong>${currency}${remaining.toFixed(0)}</strong> more to unlock complimentary express delivery.`;
-      }
+      freeShippingBar.style.width = '100%';
+      freeShippingText.innerHTML = `✨ <strong>Complimentary Express Delivery</strong> across India`;
     }
 
     cartDrawer.innerHTML = this.items.map((item, idx) => `
@@ -217,6 +210,9 @@ const App = {
     this.cart.updateUI();
     this.initEventListeners();
 
+    // Welcome Lead Capture Modal (2.5s delay for new visitors, non-intrusive)
+    this.initWelcomeLeadModal();
+
     // Listen for live updates from Admin Panel
     if (window.Store) {
       window.Store.subscribe('products', () => {
@@ -239,6 +235,7 @@ const App = {
     // Keyboard escape to close modals
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        this.closeWelcomeLeadModal(true);
         this.closeCustomerModal();
         this.closeProductModal();
         this.closeCart();
@@ -252,12 +249,12 @@ const App = {
 
     // Brand name
     document.querySelectorAll('.store-name-text').forEach(el => {
-      el.textContent = settings.storeName || "MUSE ATELIER";
+      el.textContent = settings.storeName || "Elumalayan Garments";
     });
 
     // Tagline
     document.querySelectorAll('.store-tagline-text').forEach(el => {
-      el.textContent = settings.tagline || "";
+      el.textContent = settings.tagline || "Traditional Elegance, Made for Little Princesses!";
     });
 
     // Announcement bar
@@ -585,8 +582,6 @@ const App = {
               class="bg-white border border-zinc-200 text-xs py-2 px-3 focus:outline-none focus:border-zinc-900"
             >
               <option value="featured" ${this.sortBy === 'featured' ? 'selected' : ''}>Curated / Featured</option>
-              <option value="price-low" ${this.sortBy === 'price-low' ? 'selected' : ''}>Price: Low to High</option>
-              <option value="price-high" ${this.sortBy === 'price-high' ? 'selected' : ''}>Price: High to Low</option>
               <option value="newest" ${this.sortBy === 'newest' ? 'selected' : ''}>Newest Pieces</option>
               <option value="alpha" ${this.sortBy === 'alpha' ? 'selected' : ''}>Alphabetical (A–Z)</option>
             </select>
@@ -620,25 +615,21 @@ const App = {
         </div>
       ` : this.viewMode === 'carousel' ? `
         <!-- Horizontal Carousel Track -->
-        <div id="design-carousel-track" class="carousel-track flex gap-5 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory hide-scrollbar">
+        <div id="design-carousel-track" class="carousel-track flex gap-4 sm:gap-5 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory hide-scrollbar">
           ${products.map(product => this.renderProductCardHtml(product, currency, 'carousel')).join('')}
         </div>
       ` : `
-        <!-- Full Product Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Full Product Grid (Clean 2-Column on Mobile, Multi-Column on Desktop) -->
+        <div class="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
           ${products.map(product => this.renderProductCardHtml(product, currency, 'grid')).join('')}
         </div>
       `}
     `;
   },
 
-  // Helper to render consistent, editorial product card HTML
+  // Helper to render consistent, editorial product card HTML (Catalog-Only Mode)
   renderProductCardHtml(product, currency, mode = 'carousel') {
     const isSoldOut = !product.isAvailable;
-    const comparePriceHtml = product.comparePrice && product.comparePrice > product.price 
-      ? `<span class="line-through text-zinc-400 text-xs ml-2">${currency}${product.comparePrice}</span>` 
-      : '';
-
     const primaryImg = (product.images && product.images[0]) || product.image;
     const secondaryImg = (product.images && product.images.length > 1) 
       ? product.images[1] 
@@ -657,7 +648,8 @@ const App = {
             src="${primaryImg}" 
             alt="${product.name}" 
             loading="lazy" 
-            class="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105" 
+            decoding="async"
+            class="responsive-garment-img w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105" 
           />
 
           ${secondaryImg ? `
@@ -665,12 +657,13 @@ const App = {
               src="${secondaryImg}" 
               alt="${product.name} alternate angle" 
               loading="lazy" 
-              class="img-secondary absolute inset-0 w-full h-full object-cover object-top" 
+              decoding="async"
+              class="responsive-garment-img img-secondary absolute inset-0 w-full h-full object-cover object-top" 
             />
           ` : ''}
 
           <!-- Badges -->
-          <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+          <div class="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 flex flex-col gap-1.5 z-10">
             ${isSoldOut ? `
               <span class="badge-luxury bg-zinc-900 text-white shadow-sm">
                 Unavailable
@@ -687,29 +680,23 @@ const App = {
             ` : ''}
           </div>
 
-          <!-- Quick Action Floating Overlay -->
-          <div class="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2 z-20">
+          <!-- Quick WhatsApp Inquiry Floating Overlay -->
+          <div class="absolute inset-x-2.5 bottom-2.5 sm:inset-x-3 sm:bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex z-20">
             <button 
-              onclick="event.stopPropagation(); App.quickAddToCart('${product.id}')"
-              ${isSoldOut ? 'disabled' : ''}
-              class="flex-1 bg-zinc-900/95 hover:bg-zinc-900 text-white text-[11px] uppercase tracking-wider py-2.5 px-3 backdrop-blur-sm transition-colors text-center font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+              type="button"
+              onclick="event.stopPropagation(); App.inquireOnWhatsApp('${product.id}')"
+              class="w-full min-h-[44px] bg-zinc-950/95 hover:bg-emerald-700 text-white text-[11px] uppercase tracking-wider py-2.5 px-3 backdrop-blur-sm transition-colors text-center font-medium flex items-center justify-center gap-1.5 shadow-md"
             >
-              ${isSoldOut ? 'Sold Out' : 'Quick Add'}
-            </button>
-            <button 
-              onclick="event.stopPropagation(); App.quickWhatsAppOrder('${product.id}')"
-              title="Order directly via WhatsApp"
-              class="bg-white/95 hover:bg-white text-zinc-900 p-2.5 backdrop-blur-sm transition-colors"
-            >
-              <svg class="w-4 h-4 text-emerald-600 fill-current" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5 fill-current text-emerald-400" viewBox="0 0 24 24">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
               </svg>
+              <span>Inquire on WhatsApp</span>
             </button>
           </div>
         </div>
 
         <!-- Product Meta -->
-        <div class="p-4 flex flex-col flex-1 justify-between bg-white">
+        <div class="p-3 sm:p-4 flex flex-col flex-1 justify-between bg-white">
           <div>
             <span class="text-[10px] uppercase tracking-widest text-zinc-400 font-semibold block mb-1">
               ${product.category}
@@ -719,13 +706,21 @@ const App = {
             </h4>
           </div>
 
-          <div class="mt-3 pt-2.5 border-t border-zinc-100 flex items-baseline justify-between">
-            <div class="text-sm font-semibold text-zinc-950">
-              ${currency}${product.price.toLocaleString()} ${comparePriceHtml}
-            </div>
-            <span class="text-[11px] ${isSoldOut ? 'text-rose-500 font-medium' : 'text-emerald-700 font-medium'}">
-              ${isSoldOut ? 'Unavailable' : 'In Stock'}
+          <div class="mt-2.5 pt-2 border-t border-zinc-100 flex items-center justify-between gap-1.5 sm:gap-2">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#4A0213] bg-pink-50 border border-pink-200/90 rounded truncate shadow-xs">
+              Wholesale & Direct Orders
             </span>
+            <button 
+              type="button"
+              onclick="event.stopPropagation(); App.inquireOnWhatsApp('${product.id}')"
+              class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-emerald-700 hover:text-emerald-950 transition-colors py-1.5 px-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/90"
+              title="Inquire on WhatsApp"
+            >
+              <svg class="w-3.5 h-3.5 fill-current text-emerald-600 flex-shrink-0" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+              </svg>
+              <span>Inquire</span>
+            </button>
           </div>
         </div>
       </div>
@@ -775,25 +770,38 @@ const App = {
     const hasMultiple = galleryImages.length > 1;
 
     container.innerHTML = `
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-12">
         <!-- Gallery Column -->
-        <div class="md:col-span-6 flex flex-col gap-4">
-          <!-- Main Image Display with Mobile Swipe & Prev/Next Arrows -->
+        <div class="md:col-span-6 flex flex-col gap-3">
+          <!-- Main Image Display with Mobile CSS Scroll Snap Touch Carousel & Prev/Next Arrows -->
           <div 
             id="modal-main-image-container"
-            class="relative aspect-[3/4] bg-zinc-100 overflow-hidden border border-zinc-200/80 select-none flex items-center justify-center group"
-            ontouchstart="App.handleGalleryTouchStart(event)"
-            ontouchend="App.handleGalleryTouchEnd(event)"
+            class="relative w-full aspect-[3/4] bg-zinc-100 overflow-hidden border border-zinc-200/80 group"
           >
-            <img 
-              id="modal-main-image" 
-              src="${galleryImages[0]}" 
-              alt="${product.name}" 
-              class="w-full h-full object-contain sm:object-cover object-top transition-all duration-300 hover:scale-105"
-            />
+            <!-- Native Scroll Snap Touch Carousel Track -->
+            <div 
+              id="modal-gallery-carousel" 
+              class="modal-gallery-track w-full h-full flex overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar"
+              onscroll="App.handleModalGalleryScroll(this)"
+            >
+              ${galleryImages.map((img, idx) => `
+                <div 
+                  class="modal-gallery-slide snap-start w-full h-full flex-shrink-0 flex items-center justify-center bg-zinc-100 relative overflow-hidden" 
+                  data-slide-index="${idx}"
+                >
+                  <img 
+                    src="${img}" 
+                    alt="${product.name} - Photo ${idx + 1}" 
+                    loading="${idx === 0 ? 'eager' : 'lazy'}" 
+                    decoding="async" 
+                    class="w-full h-full object-contain sm:object-cover object-top select-none transition-transform duration-500 hover:scale-105 responsive-garment-img" 
+                  />
+                </div>
+              `).join('')}
+            </div>
 
             <!-- Badges -->
-            <div class="absolute top-4 left-4 flex flex-col gap-1.5 z-10 pointer-events-none">
+            <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
               ${isSoldOut ? `
                 <div class="badge-luxury bg-zinc-900 text-white">Currently Unavailable</div>
               ` : product.badge ? `
@@ -815,7 +823,7 @@ const App = {
               <button 
                 type="button"
                 onclick="event.stopPropagation(); App.prevModalGalleryImage()" 
-                class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-zinc-950 hover:text-white text-zinc-900 flex items-center justify-center shadow-md transition-all z-20 focus:outline-none"
+                class="absolute left-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white/90 hover:bg-zinc-950 hover:text-white text-zinc-900 flex items-center justify-center shadow-md transition-all z-20 focus:outline-none"
                 title="Previous photo"
                 aria-label="Previous photo"
               >
@@ -827,7 +835,7 @@ const App = {
               <button 
                 type="button"
                 onclick="event.stopPropagation(); App.nextModalGalleryImage()" 
-                class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-zinc-950 hover:text-white text-zinc-900 flex items-center justify-center shadow-md transition-all z-20 focus:outline-none"
+                class="absolute right-2 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white/90 hover:bg-zinc-950 hover:text-white text-zinc-900 flex items-center justify-center shadow-md transition-all z-20 focus:outline-none"
                 title="Next photo"
                 aria-label="Next photo"
               >
@@ -838,25 +846,40 @@ const App = {
             ` : ''}
           </div>
 
+          <!-- Subtle Pagination Dots (Up to 10 photos) -->
+          ${hasMultiple ? `
+            <div id="modal-gallery-dots" class="flex items-center justify-center gap-1.5 py-1">
+              ${galleryImages.map((_, idx) => `
+                <button 
+                  type="button" 
+                  onclick="App.scrollToModalGallerySlide(${idx})" 
+                  data-dot-index="${idx}"
+                  class="modal-dot no-min-touch ${idx === 0 ? 'active' : ''} focus:outline-none" 
+                  aria-label="Go to photo ${idx + 1}"
+                ></button>
+              `).join('')}
+            </div>
+          ` : ''}
+
           <!-- Thumbnails Strip (Only if > 1 photo) -->
           ${hasMultiple ? `
             <div id="modal-thumbnails-carousel" class="flex gap-2.5 overflow-x-auto pb-1 scroll-smooth hide-scrollbar">
               ${galleryImages.map((img, idx) => `
                 <button 
                   type="button"
-                  onclick="App.setModalGalleryImage(${idx})" 
+                  onclick="App.scrollToModalGallerySlide(${idx})" 
                   data-gallery-idx="${idx}"
-                  class="modal-thumb-btn flex-shrink-0 w-16 h-20 border transition-all overflow-hidden focus:outline-none bg-white p-0.5 ${
+                  class="modal-thumb-btn flex-shrink-0 w-14 h-18 sm:w-16 sm:h-20 border transition-all overflow-hidden focus:outline-none bg-white p-0.5 ${
                     idx === 0 ? 'border-zinc-950 ring-2 ring-zinc-950 shadow-xs' : 'border-zinc-200 hover:border-zinc-400 opacity-70 hover:opacity-100'
                   }"
                   title="View photo ${idx + 1}"
                 >
-                  <img src="${img}" alt="${product.name} view ${idx + 1}" class="w-full h-full object-contain sm:object-cover" />
+                  <img src="${img}" alt="${product.name} view ${idx + 1}" loading="lazy" decoding="async" class="w-full h-full object-contain sm:object-cover" />
                 </button>
               `).join('')}
             </div>
             <p class="text-[11px] text-zinc-400 text-center sm:hidden">
-              Swipe photo or tap thumbnails to view details
+              Swipe photo or tap thumbnails to explore collection
             </p>
           ` : ''}
         </div>
@@ -876,12 +899,11 @@ const App = {
               ${product.name}
             </h1>
 
-            <div class="flex items-baseline gap-3 mb-6">
-              <span class="text-2xl font-semibold text-zinc-900">${currency}${product.price.toLocaleString()}</span>
-              ${product.comparePrice ? `
-                <span class="line-through text-zinc-400 text-base">${currency}${product.comparePrice.toLocaleString()}</span>
-              ` : ''}
-              <span class="text-xs text-zinc-500 ml-auto">Taxes & duties included</span>
+            <div class="flex items-center gap-2.5 mb-6">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#4A0213] bg-pink-50 border border-pink-200/90 rounded shadow-xs">
+                Wholesale & Direct Orders
+              </span>
+              <span class="text-xs font-medium text-zinc-500">· Direct Factory Pricing</span>
             </div>
 
             <hr class="border-zinc-200 my-6" />
@@ -936,62 +958,46 @@ const App = {
               </div>
             ` : ''}
 
-            <!-- Quantity Selector -->
-            <div class="flex items-center gap-4 mb-8">
-              <span class="text-xs uppercase tracking-wider font-semibold text-zinc-800">Quantity</span>
-              <div class="inline-flex items-center border border-zinc-300">
-                <button onclick="App.changeModalQty(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-zinc-100 text-sm">−</button>
-                <span id="modal-qty-display" class="w-10 text-center text-xs font-semibold">1</span>
-                <button onclick="App.changeModalQty(1)" class="w-8 h-8 flex items-center justify-center hover:bg-zinc-100 text-sm">+</button>
-              </div>
-            </div>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="flex flex-col gap-3 pt-4 border-t border-zinc-200">
+          <!-- Inquire on WhatsApp Action -->
+          <div class="flex flex-col gap-3 pt-6 border-t border-zinc-200">
             <button 
-              onclick="App.addModalToCart()"
-              ${isSoldOut ? 'disabled' : ''}
-              class="w-full btn-primary-luxury py-3.5 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+              type="button"
+              onclick="App.inquireModalOnWhatsApp()"
+              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 px-6 text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2.5 transition-all shadow-md group"
             >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              ${isSoldOut ? 'Currently Out of Stock' : 'Add to Shopping Bag'}
-            </button>
-
-            <!-- Direct WhatsApp Order Button -->
-            <button 
-              onclick="App.orderModalViaWhatsApp()"
-              class="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white py-3.5 px-4 text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
-            >
-              <svg class="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
               </svg>
-              <span>Instant Order via WhatsApp</span>
+              <span>Inquire on WhatsApp</span>
             </button>
+            <p class="text-[11px] text-zinc-500 text-center font-light">
+              Chat directly with our Salem showroom concierge for exact sizing, fabric samples, and pricing.
+            </p>
+          </div>
 
-            <!-- Product Specs Accordion -->
-            <div class="mt-4 border-t border-zinc-200 divide-y divide-zinc-200 text-xs">
-              <details class="py-3 group cursor-pointer">
-                <summary class="flex justify-between items-center font-medium text-zinc-900 list-none">
-                  <span>Composition & Garment Care</span>
-                  <span class="group-open:rotate-180 transition-transform text-zinc-400">▼</span>
-                </summary>
-                <p class="pt-2 text-zinc-500 leading-relaxed">
-                  ${product.details || "100% Premium Noble Fibers. Sustainably woven and finished by certified artisans."}
-                </p>
-              </details>
-              <details class="py-3 group cursor-pointer">
-                <summary class="flex justify-between items-center font-medium text-zinc-900 list-none">
-                  <span>Complimentary Shipping & Global Returns</span>
-                  <span class="group-open:rotate-180 transition-transform text-zinc-400">▼</span>
-                </summary>
-                <p class="pt-2 text-zinc-500 leading-relaxed">
-                  Complimentary express delivery across India on orders over ${currency}1,500. Delivery within 2-4 business days. 30-day hassle-free return window.
-                </p>
-              </details>
-            </div>
+          <!-- Product Specs Accordion -->
+          <div class="mt-4 border-t border-zinc-200 divide-y divide-zinc-200 text-xs">
+            <details class="py-3 group cursor-pointer">
+              <summary class="flex justify-between items-center font-medium text-zinc-900 list-none">
+                <span>Composition & Garment Care</span>
+                <span class="group-open:rotate-180 transition-transform text-zinc-400">▼</span>
+              </summary>
+              <p class="pt-2 text-zinc-500 leading-relaxed">
+                ${product.details || "100% Premium Noble Fibers. Sustainably woven and finished by certified artisans."}
+              </p>
+            </details>
+            <details class="py-3 group cursor-pointer">
+              <summary class="flex justify-between items-center font-medium text-zinc-900 list-none">
+                <span>Complimentary Shipping & Atelier Service</span>
+                <span class="group-open:rotate-180 transition-transform text-zinc-400">▼</span>
+              </summary>
+              <p class="pt-2 text-zinc-500 leading-relaxed">
+                Complimentary express delivery across Salem & across India. Direct atelier coordination via WhatsApp.
+              </p>
+            </details>
+          </div>
           </div>
         </div>
       </div>
@@ -1001,65 +1007,89 @@ const App = {
     document.body.style.overflow = 'hidden';
   },
 
-  setModalGalleryImage(index) {
+  scrollToModalGallerySlide(index) {
     if (!this.modalGalleryImages || this.modalGalleryImages.length === 0) return;
     if (index < 0 || index >= this.modalGalleryImages.length) return;
 
     this.modalActiveImageIndex = index;
-    const mainImg = document.getElementById('modal-main-image');
-    if (mainImg) {
-      mainImg.style.opacity = '0.5';
-      mainImg.src = this.modalGalleryImages[index];
-      setTimeout(() => {
-        if (mainImg) mainImg.style.opacity = '1';
-      }, 80);
+    const carousel = document.getElementById('modal-gallery-carousel');
+    if (carousel) {
+      const slideWidth = carousel.clientWidth || carousel.offsetWidth;
+      carousel.scrollTo({
+        left: index * slideWidth,
+        behavior: 'smooth'
+      });
     }
 
+    this.updateModalGalleryIndicators(index);
+  },
+
+  handleModalGalleryScroll(carouselEl) {
+    if (!carouselEl) return;
+    const slideWidth = carouselEl.clientWidth || carouselEl.offsetWidth;
+    if (!slideWidth) return;
+    const newIdx = Math.round(carouselEl.scrollLeft / slideWidth);
+    if (newIdx !== this.modalActiveImageIndex && newIdx >= 0 && newIdx < this.modalGalleryImages.length) {
+      this.modalActiveImageIndex = newIdx;
+      this.updateModalGalleryIndicators(newIdx);
+    }
+  },
+
+  updateModalGalleryIndicators(index) {
     const counter = document.getElementById('modal-gallery-counter');
     if (counter) {
       counter.textContent = `${index + 1} / ${this.modalGalleryImages.length}`;
     }
 
+    // Update Pagination Dots
+    document.querySelectorAll('#modal-gallery-dots .modal-dot').forEach((dot, idx) => {
+      if (idx === index) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+
+    // Update Thumbnail Strip
     document.querySelectorAll('.modal-thumb-btn').forEach(btn => {
       const idx = parseInt(btn.getAttribute('data-gallery-idx'), 10);
       if (idx === index) {
-        btn.className = 'modal-thumb-btn flex-shrink-0 w-16 h-20 border transition-all overflow-hidden focus:outline-none bg-white p-0.5 border-zinc-950 ring-2 ring-zinc-950 shadow-xs opacity-100';
+        btn.className = 'modal-thumb-btn flex-shrink-0 w-14 h-18 sm:w-16 sm:h-20 border transition-all overflow-hidden focus:outline-none bg-white p-0.5 border-zinc-950 ring-2 ring-zinc-950 shadow-xs opacity-100';
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       } else {
-        btn.className = 'modal-thumb-btn flex-shrink-0 w-16 h-20 border transition-all overflow-hidden focus:outline-none bg-white p-0.5 border-zinc-200 hover:border-zinc-400 opacity-70 hover:opacity-100';
+        btn.className = 'modal-thumb-btn flex-shrink-0 w-14 h-18 sm:w-16 sm:h-20 border transition-all overflow-hidden focus:outline-none bg-white p-0.5 border-zinc-200 hover:border-zinc-400 opacity-70 hover:opacity-100';
       }
     });
+  },
+
+  setModalGalleryImage(index) {
+    this.scrollToModalGallerySlide(index);
   },
 
   prevModalGalleryImage() {
     if (!this.modalGalleryImages || this.modalGalleryImages.length <= 1) return;
     const newIdx = (this.modalActiveImageIndex - 1 + this.modalGalleryImages.length) % this.modalGalleryImages.length;
-    this.setModalGalleryImage(newIdx);
+    this.scrollToModalGallerySlide(newIdx);
   },
 
   nextModalGalleryImage() {
     if (!this.modalGalleryImages || this.modalGalleryImages.length <= 1) return;
     const newIdx = (this.modalActiveImageIndex + 1) % this.modalGalleryImages.length;
-    this.setModalGalleryImage(newIdx);
+    this.scrollToModalGallerySlide(newIdx);
   },
 
-  handleGalleryTouchStart(e) {
-    if (e.changedTouches && e.changedTouches[0]) {
-      this.touchStartX = e.changedTouches[0].screenX;
-    }
-  },
-
-  handleGalleryTouchEnd(e) {
-    if (e.changedTouches && e.changedTouches[0]) {
-      this.touchEndX = e.changedTouches[0].screenX;
-      const diff = this.touchStartX - this.touchEndX;
-      if (diff > 45) {
-        // Swiped left -> next photo
-        this.nextModalGalleryImage();
-      } else if (diff < -45) {
-        // Swiped right -> prev photo
-        this.prevModalGalleryImage();
-      }
-    }
+  launchDirectWhatsApp(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const settings = window.Store ? window.Store.getSettings() : window.DEFAULT_STORE_CONFIG;
+    const numbers = [
+      settings.whatsappNumber1 || '9940773278',
+      settings.whatsappNumber2 || '9940773278',
+      settings.whatsappNumber3 || '9940773278'
+    ].filter(Boolean);
+    const targetNumber = numbers[0].replace(/\D/g, '');
+    const cleanNum = targetNumber.length === 10 ? '91' + targetNumber : targetNumber;
+    const text = encodeURIComponent(`Hello ${settings.storeName || 'Elumalayan Garments'}, I would like to inquire about your fine clothing collection.`);
+    window.open(`https://wa.me/${cleanNum}?text=${text}`, '_blank');
   },
 
   selectModalSize(size, btnEl) {
@@ -1095,6 +1125,172 @@ const App = {
       modal.classList.add('hidden');
       document.body.style.overflow = '';
     }
+  },
+
+  // --- NEW VISITOR VIP WHATSAPP LEAD CAPTURE SYSTEM ---
+
+  initWelcomeLeadModal() {
+    try {
+      if (localStorage.getItem('eluma_popup_closed') === 'true') {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+
+    // Elegant 2.5 second trigger after visitor arrives
+    setTimeout(() => {
+      try {
+        if (localStorage.getItem('eluma_popup_closed') === 'true') {
+          return;
+        }
+      } catch (e) {}
+
+      this.openWelcomeLeadModal();
+    }, 2500);
+  },
+
+  openWelcomeLeadModal() {
+    const modal = document.getElementById('welcome-lead-modal');
+    const backdrop = document.getElementById('welcome-lead-backdrop');
+    const card = document.getElementById('welcome-lead-card');
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      if (backdrop) {
+        backdrop.classList.remove('opacity-0');
+        backdrop.classList.add('opacity-100');
+      }
+      if (card) {
+        card.classList.remove('opacity-0', 'scale-95');
+        card.classList.add('opacity-100', 'scale-100');
+      }
+    }, 20);
+  },
+
+  closeWelcomeLeadModal(skipped = true) {
+    try {
+      localStorage.setItem('eluma_popup_closed', 'true');
+    } catch (e) {}
+
+    const modal = document.getElementById('welcome-lead-modal');
+    const backdrop = document.getElementById('welcome-lead-backdrop');
+    const card = document.getElementById('welcome-lead-card');
+    if (!modal) return;
+
+    if (backdrop && card) {
+      backdrop.classList.remove('opacity-100');
+      backdrop.classList.add('opacity-0');
+      card.classList.remove('opacity-100', 'scale-100');
+      card.classList.add('opacity-0', 'scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    } else {
+      modal.classList.add('hidden');
+    }
+  },
+
+  handleWelcomeLeadSubmit(e) {
+    e.preventDefault();
+    const phoneInput = document.getElementById('welcome-lead-phone');
+    const errorEl = document.getElementById('welcome-lead-error');
+    if (!phoneInput) return;
+
+    const raw = phoneInput.value.trim();
+    const sanitized = this.sanitizeIndianPhone(raw);
+
+    if (!sanitized.isValid) {
+      phoneInput.classList.add('input-invalid');
+      if (errorEl) {
+        errorEl.textContent = 'Please enter a valid 10-digit Indian WhatsApp number.';
+        errorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    // Persist closed state immediately so popup is never shown again
+    try {
+      localStorage.setItem('eluma_popup_closed', 'true');
+    } catch (e) {}
+
+    // Save/update phone into local storage so future forms have it
+    try {
+      const existing = this.loadCustomerInfo() || {};
+      existing.mobile = sanitized.formatted;
+      existing.whatsapp = sanitized.formatted;
+      existing.mobileDigits = sanitized.digits10;
+      existing.whatsappDigits = sanitized.digits10;
+      this.saveCustomerInfo(existing);
+    } catch (err) {}
+
+    // Register VIP lead in store database
+    if (window.Store && typeof window.Store.addOrder === 'function') {
+      window.Store.addOrder({
+        customerName: 'VIP WhatsApp Member (' + sanitized.formatted + ')',
+        mobile: sanitized.formatted,
+        whatsapp: sanitized.formatted,
+        email: '',
+        address: '',
+        items: [{
+          productId: 'vip-lead',
+          name: 'VIP WhatsApp Updates Registration',
+          category: 'VIP Lead',
+          size: 'N/A',
+          color: 'N/A',
+          quantity: 1,
+          price: 0
+        }],
+        totalPrice: 0,
+        status: 'New'
+      }).catch(err => console.warn('Lead dispatch note:', err));
+    }
+
+    this.showToast('Thank you! You are now subscribed to VIP WhatsApp updates.', 'success');
+    this.closeWelcomeLeadModal(false);
+  },
+
+  clearWelcomeLeadError() {
+    const phoneInput = document.getElementById('welcome-lead-phone');
+    const errorEl = document.getElementById('welcome-lead-error');
+    if (phoneInput) phoneInput.classList.remove('input-invalid');
+    if (errorEl) errorEl.classList.add('hidden');
+  },
+
+  // --- CATALOG-ONLY WHATSAPP INQUIRY HANDLERS ---
+
+  inquireOnWhatsApp(productId) {
+    const product = window.Store ? window.Store.getProductById(productId) : null;
+    if (!product) return;
+    const settings = window.Store ? window.Store.getSettings() : window.DEFAULT_STORE_CONFIG;
+    const storeName = settings.storeName || 'Elumalayan Garments';
+    const n1 = window.normalizeWhatsAppNumber ? window.normalizeWhatsAppNumber(settings.whatsappNumber || '9940773278') : { clean: '919940773278' };
+    const cleanPhone = n1.clean || '919940773278';
+
+    const message = `Hi ${storeName}, I would like to inquire about ${product.name}.`;
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+    this.showToast(`Connecting to WhatsApp concierge for "${product.name}"...`, 'success');
+  },
+
+  inquireModalOnWhatsApp() {
+    if (!this.selectedProduct) return;
+    const settings = window.Store ? window.Store.getSettings() : window.DEFAULT_STORE_CONFIG;
+    const storeName = settings.storeName || 'Elumalayan Garments';
+    const n1 = window.normalizeWhatsAppNumber ? window.normalizeWhatsAppNumber(settings.whatsappNumber || '9940773278') : { clean: '919940773278' };
+    const cleanPhone = n1.clean || '919940773278';
+
+    let message = `Hi ${storeName}, I would like to inquire about ${this.selectedProduct.name}.`;
+    if (this.selectedSize || (this.selectedColor && this.selectedColor.name)) {
+      const details = [];
+      if (this.selectedSize) details.push(`Size: ${this.selectedSize}`);
+      if (this.selectedColor && this.selectedColor.name) details.push(`Color: ${this.selectedColor.name}`);
+      message += ` (${details.join(', ')})`;
+    }
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+    this.showToast(`Opening WhatsApp concierge for "${this.selectedProduct.name}"...`, 'success');
   },
 
   addModalToCart() {

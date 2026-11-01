@@ -8,8 +8,11 @@
 const DEFAULT_STORE_CONFIG = {
   // Brand Identity
   storeName: "Elumalayan Garments",
-  tagline: "Exquisite Indian Apparel, Modern Silhouettes & Traditional Elegance",
-  established: "2024",
+  brandName: "Poorani Pattu Pavadai",
+  subtitle: "Home of Poorani Pattu Pavadai",
+  tagline: "Traditional Elegance, Made for Little Princesses!",
+  subBadge: "Little Queen's Pattu Wear",
+  established: "2010",
   
   // Currency & Commerce (Indian Rupee)
   currencySymbol: "₹",
