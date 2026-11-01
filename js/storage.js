@@ -776,6 +776,114 @@ class StoreManager {
     return product;
   }
 
+  async addProductAsync(newProduct) {
+    const products = this.getProducts();
+    const id = newProduct.id || ('prod-' + Date.now());
+    const rawImages = Array.isArray(newProduct.images) && newProduct.images.length > 0
+      ? newProduct.images
+      : (newProduct.image ? [newProduct.image] : ["https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85"]);
+    const images = rawImages.slice(0, 10);
+    const image = images[0] || newProduct.image || "";
+    const secondaryImage = images[1] || newProduct.secondaryImage || image;
+
+    const product = {
+      id,
+      name: newProduct.name || "Untitled Garment",
+      category: newProduct.category || "Tailoring & Suits",
+      price: parseFloat(newProduct.price) || 0,
+      comparePrice: newProduct.comparePrice ? parseFloat(newProduct.comparePrice) : null,
+      images,
+      image,
+      secondaryImage,
+      description: newProduct.description || "Crafted with precision and noble materials for contemporary elegance.",
+      details: newProduct.details || "100% Premium Noble Fibers; Hand-finished seams; Dry clean.",
+      sizes: Array.isArray(newProduct.sizes) && newProduct.sizes.length > 0 ? newProduct.sizes : ["S", "M", "L"],
+      colors: Array.isArray(newProduct.colors) && newProduct.colors.length > 0 ? newProduct.colors : [{ name: "Onyx Black", hex: "#111111" }],
+      isAvailable: typeof newProduct.isAvailable === 'boolean' ? newProduct.isAvailable : true,
+      badge: newProduct.badge || null,
+      order: Date.now(),
+      createdAt: new Date().toISOString()
+    };
+
+    products.unshift(product);
+    this.saveProducts(products);
+
+    const token = this.getAuthToken();
+    if (token) {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(product)
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || errJson.message || `Server responded with HTTP ${res.status}`);
+      }
+      const data = await res.json().catch(() => ({}));
+      if (data && data.id) {
+        product.id = data.id;
+      }
+    }
+
+    return product;
+  }
+
+  async updateProductAsync(id, updates) {
+    const products = this.getProducts();
+    const index = products.findIndex(p => String(p.id) === String(id));
+    if (index === -1) throw new Error(`Product #${id} not found in local catalog`);
+
+    const existing = products[index];
+
+    let images = updates.images;
+    if (!Array.isArray(images)) {
+      if (updates.image) {
+        images = [updates.image, ...(existing.images || []).filter(img => img !== updates.image)];
+      } else {
+        images = existing.images || [existing.image, existing.secondaryImage].filter(Boolean);
+      }
+    }
+    images = (images || []).slice(0, 10);
+    const image = images[0] || updates.image || existing.image || "";
+    const secondaryImage = images[1] || updates.secondaryImage || existing.secondaryImage || image;
+
+    const updated = {
+      ...existing,
+      ...updates,
+      images,
+      image,
+      secondaryImage,
+      price: updates.price !== undefined ? parseFloat(updates.price) : existing.price,
+      comparePrice: updates.comparePrice !== undefined ? (updates.comparePrice ? parseFloat(updates.comparePrice) : null) : existing.comparePrice,
+      isAvailable: updates.isAvailable !== undefined ? Boolean(updates.isAvailable) : existing.isAvailable,
+      updatedAt: new Date().toISOString()
+    };
+
+    products[index] = updated;
+    this.saveProducts(products);
+
+    const token = this.getAuthToken();
+    if (token) {
+      const res = await fetch(`/api/products/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updated)
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || errJson.message || `Server responded with HTTP ${res.status}`);
+      }
+    }
+
+    return updated;
+  }
+
   updateProduct(id, updates) {
     const products = this.getProducts();
     const index = products.findIndex(p => String(p.id) === String(id));

@@ -18,108 +18,146 @@
 const ImageOptimizer = {
   /**
    * Client-Side Image Compression Engine:
-   * - Max dimension: 1200px (width or height, maintaining original aspect ratio).
-   * - Export format: canvas.toDataURL('image/jpeg', 0.82).
-   * - Shrinks 5MB - 15MB photos down to ~150KB - 250KB with zero visible loss in luxury quality.
+   * - Max dimensions: 1000px × 1000px (width or height, maintaining original aspect ratio).
+   * - Export format: canvas.toDataURL('image/jpeg', 0.78).
+   * - Converts HEIC/PNG/WebP/JPEG photos into clean, compressed JPEG Base64 strings staying below ~180 KB.
    * - Feeds compressed Base64 string directly into product image payload.
    */
-  async compress(file, maxDimension = 1200, quality = 0.82) {
+  async compress(file, maxDimension = 1000, quality = 0.78) {
     return new Promise((resolve, reject) => {
-      if (!file) {
-        return reject(new Error('Failed to load image. Please try another photo.'));
-      }
-      
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      const fileType = (file.type || '').toLowerCase();
-      if (fileType && !validTypes.includes(fileType)) {
-        return reject(new Error('Failed to load image. Please try another photo.'));
-      }
+      try {
+        if (!file) {
+          return reject(new Error('No image file selected. Please select a valid photo.'));
+        }
 
-      const originalSize = file.size || 0;
-      const reader = new FileReader();
+        const originalSize = file.size || 0;
+        const fileName = file.name || 'photo';
+        const fileType = (file.type || '').toLowerCase();
 
-      reader.onerror = () => reject(new Error('Failed to load image. Please try another photo.'));
+        // Support JPEG, JPG, PNG, WebP, HEIC/HEIF
+        const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
+        const hasValidExt = validExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
+        const validMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+        const hasValidMime = validMimes.includes(fileType);
 
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onerror = () => reject(new Error('Failed to load image. Please try another photo.'));
+        if (!hasValidExt && !hasValidMime && fileType && !fileType.startsWith('image/')) {
+          return reject(new Error(`Unsupported file format (${fileType || 'unknown'}). Please choose a JPG, PNG, or WebP photo.`));
+        }
 
-        img.onload = () => {
+        const reader = new FileReader();
+
+        reader.onerror = (readErr) => {
+          console.error('[Upload Debug] FileReader error:', readErr);
+          reject(new Error(`Failed to read file "${fileName}". File may be inaccessible.`));
+        };
+
+        reader.onload = (e) => {
           try {
-            let width = img.naturalWidth || img.width;
-            let height = img.naturalHeight || img.height;
-            const originalWidth = width;
-            const originalHeight = height;
-
-            if (!width || !height) {
-              return reject(new Error('Failed to load image. Please try another photo.'));
+            const dataUri = e.target && e.target.result;
+            if (!dataUri) {
+              return reject(new Error(`Empty data loaded from "${fileName}".`));
             }
 
-            // Strictly preserve original aspect ratio with max dimension of 1200px
-            if (width > height) {
-              if (width > maxDimension) {
-                height = Math.round((height * maxDimension) / width);
-                width = maxDimension;
+            const img = new Image();
+
+            img.onerror = (imgErr) => {
+              console.error('[Upload Debug] Image decode error:', imgErr);
+              if (fileName.toLowerCase().endsWith('.heic') || fileType.includes('heic')) {
+                reject(new Error(`HEIC format is not supported directly by your browser. Please select a JPG or PNG copy.`));
+              } else {
+                reject(new Error(`Failed to decode image "${fileName}". Please check image format.`));
               }
-            } else {
-              if (height > maxDimension) {
-                width = Math.round((width * maxDimension) / height);
-                height = maxDimension;
+            };
+
+            img.onload = () => {
+              try {
+                let width = img.naturalWidth || img.width;
+                let height = img.naturalHeight || img.height;
+                const originalWidth = width;
+                const originalHeight = height;
+
+                if (!width || !height) {
+                  return reject(new Error(`Invalid image dimensions (${width}x${height}) for "${fileName}".`));
+                }
+
+                // Strictly preserve original aspect ratio with max dimension of 1000px × 1000px
+                if (width > height) {
+                  if (width > maxDimension) {
+                    height = Math.round((height * maxDimension) / width);
+                    width = maxDimension;
+                  }
+                } else {
+                  if (height > maxDimension) {
+                    width = Math.round((width * maxDimension) / height);
+                    height = maxDimension;
+                  }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                  return reject(new Error('HTML5 Canvas 2D context is unavailable.'));
+                }
+
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                // Clean white backdrop avoids dark borders on transparent PNGs/WebPs when converting to JPEG
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Export format: clean compressed JPEG Base64 string at quality 0.78
+                let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+                // If Base64 string exceeds ~180 KB (~240,000 chars), perform a second pass to ensure it stays below ~180 KB
+                if (dataUrl.length > 240000) {
+                  dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+                }
+
+                const optimizedSize = Math.round((dataUrl.length * 3) / 4);
+                const savedBytes = Math.max(0, originalSize - optimizedSize);
+                const savedPercent = originalSize > 0 ? Math.round((savedBytes / originalSize) * 100) : 0;
+
+                // Clean aspect ratio label
+                const ratioVal = width / height;
+                let ratioLabel = `${width} × ${height}px`;
+                if (Math.abs(ratioVal - 0.75) < 0.05) ratioLabel += ' (3:4 Portrait)';
+                else if (Math.abs(ratioVal - 1.0) < 0.05) ratioLabel += ' (1:1 Square)';
+                else if (Math.abs(ratioVal - 0.67) < 0.05) ratioLabel += ' (2:3 Portrait)';
+
+                resolve({
+                  dataUrl,
+                  originalWidth,
+                  originalHeight,
+                  width,
+                  height,
+                  originalSize,
+                  optimizedSize,
+                  ratioLabel,
+                  savedPercent
+                });
+              } catch (canvasErr) {
+                console.error('[Upload Debug] Canvas compression error:', canvasErr);
+                reject(new Error(`Compression processing failed: ${canvasErr.message || canvasErr}`));
               }
-            }
+            };
 
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              return reject(new Error('Failed to load image. Please try another photo.'));
-            }
-
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-
-            // Clean white backdrop avoids dark borders on transparent PNGs/WebPs when converting to JPEG
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, width, height);
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // Export format: canvas.toDataURL('image/jpeg', 0.82)
-            const dataUrl = canvas.toDataURL('image/jpeg', quality);
-            const optimizedSize = Math.round((dataUrl.length * 3) / 4);
-
-            const savedBytes = Math.max(0, originalSize - optimizedSize);
-            const savedPercent = originalSize > 0 ? Math.round((savedBytes / originalSize) * 100) : 0;
-
-            // Clean aspect ratio label
-            const ratioVal = width / height;
-            let ratioLabel = `${width} × ${height}px`;
-            if (Math.abs(ratioVal - 0.75) < 0.05) ratioLabel += ' (3:4 Portrait)';
-            else if (Math.abs(ratioVal - 1.0) < 0.05) ratioLabel += ' (1:1 Square)';
-            else if (Math.abs(ratioVal - 0.67) < 0.05) ratioLabel += ' (2:3 Portrait)';
-
-            resolve({
-              dataUrl,
-              originalWidth,
-              originalHeight,
-              width,
-              height,
-              originalSize,
-              optimizedSize,
-              ratioLabel,
-              savedPercent
-            });
-          } catch (canvasErr) {
-            console.error('Canvas compression error:', canvasErr);
-            reject(new Error('Failed to load image. Please try another photo.'));
+            img.src = dataUri;
+          } catch (loadErr) {
+            console.error('[Upload Debug] Error processing reader result:', loadErr);
+            reject(new Error(`Image preparation failed: ${loadErr.message || loadErr}`));
           }
         };
 
-        img.src = e.target.result;
-      };
-
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      } catch (initErr) {
+        console.error('[Upload Debug] Compression initialization error:', initErr);
+        reject(new Error(`Upload initialization error: ${initErr.message || initErr}`));
+      }
     });
   },
 
@@ -1487,6 +1525,23 @@ const Admin = {
   // PRODUCT / DESIGN ADD & EDIT MODAL & SINGLE-CLICK PHOTO UPLOAD
   // ==========================================
 
+  showProductFormError(message) {
+    const banner = document.getElementById('product-form-error-banner');
+    const msgEl = document.getElementById('product-form-error-message');
+    if (banner && msgEl) {
+      msgEl.textContent = message;
+      banner.classList.remove('hidden');
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  },
+
+  clearProductFormError() {
+    const banner = document.getElementById('product-form-error-banner');
+    if (banner) {
+      banner.classList.add('hidden');
+    }
+  },
+
   setProductSubmitLoading(isLoading) {
     const submitBtn = document.getElementById('form-product-submit-btn');
     if (!submitBtn) return;
@@ -1513,6 +1568,7 @@ const Admin = {
     if (quickInput) quickInput.value = '';
     if (loadingOverlay) loadingOverlay.classList.add('hidden');
     if (photoReadyBadge) photoReadyBadge.classList.add('hidden');
+    this.clearProductFormError();
     this.setProductSubmitLoading(false);
     this.updateGalleryView();
   },
@@ -1523,6 +1579,7 @@ const Admin = {
     this.productImages = [];
     this.activePreviewIndex = 0;
     this.replaceTargetIndex = null;
+    this.clearProductFormError();
 
     const modal = document.getElementById('product-form-modal');
     const form = document.getElementById('product-edit-form');
@@ -1565,6 +1622,7 @@ const Admin = {
     this.editingProductId = id;
     this.uploadedImageBase64 = null;
     this.replaceTargetIndex = null;
+    this.clearProductFormError();
 
     const modal = document.getElementById('product-form-modal');
     const titleEl = document.getElementById('modal-form-title');
@@ -1693,15 +1751,9 @@ const Admin = {
   async processMultipleImageFiles(files) {
     if (!files || files.length === 0) return;
 
-    // Filter and validate image types
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    const invalidFiles = files.filter(f => !validTypes.includes((f.type || '').toLowerCase()));
+    console.log("[Upload Debug] Files selected:", files.length);
 
-    if (invalidFiles.length > 0) {
-      this.resetUploadBox();
-      alert('Failed to load image. Please try another photo.');
-      return;
-    }
+    this.clearProductFormError();
 
     const loadingOverlay = document.getElementById('image-upload-loading');
     const loadingText = document.getElementById('image-upload-loading-text');
@@ -1717,14 +1769,20 @@ const Admin = {
     this.setProductSubmitLoading(true);
 
     try {
-      // 4. Client-Side Image Compression with ImageOptimizer.compress (max 1200px, JPEG 0.82)
-      const optimizedResults = await Promise.all(
-        files.map(file => ImageOptimizer.compress(file))
-      );
+      const optimizedResults = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log("[Upload Debug] Compressing image index:", i, "Original size:", file.size);
+        const opt = await ImageOptimizer.compress(file, 1000, 0.78);
+        console.log("[Upload Debug] Compressed Base64 size (bytes):", opt.dataUrl.length);
+        optimizedResults.push(opt);
+      }
 
       const startIndex = this.productImages.length;
       optimizedResults.forEach(opt => {
-        this.productImages.push(opt.dataUrl);
+        if (this.productImages.length < 10) {
+          this.productImages.push(opt.dataUrl);
+        }
       });
 
       // Point active preview to newly added photo
@@ -1732,7 +1790,7 @@ const Admin = {
 
       // Automatically sync to product if editing an existing garment
       if (this.editingProductId) {
-        window.Store.updateProduct(this.editingProductId, {
+        await window.Store.updateProductAsync(this.editingProductId, {
           images: this.productImages,
           image: this.productImages[0],
           secondaryImage: this.productImages[1] || this.productImages[0]
@@ -1747,11 +1805,12 @@ const Admin = {
       if (photoReadyBadge) {
         photoReadyBadge.classList.remove('hidden');
       }
-      this.showToast(`Added ${files.length} photograph${files.length === 1 ? '' : 's'} to garment gallery.`, 'success');
+      this.showToast(`Added ${optimizedResults.length} photograph${optimizedResults.length === 1 ? '' : 's'} to garment gallery.`, 'success');
     } catch (err) {
-      console.error('Image optimization failed:', err);
-      this.resetUploadBox();
-      alert('Failed to load image. Please try another photo.');
+      console.error('[Upload Debug] Optimization/Upload error:', err);
+      const errMsg = err.message || 'Image processing failed';
+      this.showProductFormError(`Upload failed: ${errMsg}. Please check image format or server connection.`);
+      alert(`Upload failed: ${errMsg}. Please check image format or server connection.`);
     } finally {
       if (loadingOverlay) loadingOverlay.classList.add('hidden');
       this.setProductSubmitLoading(false);
@@ -2039,12 +2098,10 @@ const Admin = {
       return;
     }
 
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validTypes.includes((file.type || '').toLowerCase())) {
-      this.resetUploadBox();
-      alert('Failed to load image. Please try another photo.');
-      return;
-    }
+    console.log("[Upload Debug] Files selected for replacement: 1");
+    console.log("[Upload Debug] Compressing image index:", targetIdx, "Original size:", file.size);
+
+    this.clearProductFormError();
 
     const loadingOverlay = document.getElementById('image-upload-loading');
     const loadingText = document.getElementById('image-upload-loading-text');
@@ -2060,12 +2117,13 @@ const Admin = {
     this.setProductSubmitLoading(true);
 
     try {
-      // 4. Client-Side Image Compression with ImageOptimizer.compress (max 1200px, JPEG 0.82)
-      const optimized = await ImageOptimizer.compress(file);
+      const optimized = await ImageOptimizer.compress(file, 1000, 0.78);
+      console.log("[Upload Debug] Compressed Base64 size (bytes):", optimized.dataUrl.length);
+
       this.productImages[targetIdx] = optimized.dataUrl;
 
       if (this.editingProductId) {
-        window.Store.updateProduct(this.editingProductId, {
+        await window.Store.updateProductAsync(this.editingProductId, {
           images: this.productImages,
           image: this.productImages[0],
           secondaryImage: this.productImages[1] || this.productImages[0]
@@ -2083,9 +2141,10 @@ const Admin = {
       }
       this.showToast('Photograph replaced successfully.', 'success');
     } catch (err) {
-      console.error('Photo replacement failed:', err);
-      this.resetUploadBox();
-      alert('Failed to load image. Please try another photo.');
+      console.error('[Upload Debug] Photo replacement error:', err);
+      const errMsg = err.message || 'Image replacement failed';
+      this.showProductFormError(`Upload failed: ${errMsg}. Please check image format or server connection.`);
+      alert(`Upload failed: ${errMsg}. Please check image format or server connection.`);
     } finally {
       if (loadingOverlay) loadingOverlay.classList.add('hidden');
       this.setProductSubmitLoading(false);
@@ -2232,8 +2291,10 @@ const Admin = {
     `).join('');
   },
 
-  handleProductSubmit(e) {
+  async handleProductSubmit(e) {
     e.preventDefault();
+
+    this.clearProductFormError();
 
     const name = document.getElementById('form-product-name').value.trim();
     const category = document.getElementById('form-product-category').value;
@@ -2246,7 +2307,7 @@ const Admin = {
     const isAvailable = document.getElementById('form-product-available').checked;
 
     const fallbackImage = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85";
-    const finalImages = this.productImages.length > 0 ? this.productImages : [fallbackImage];
+    const finalImages = this.productImages.length > 0 ? this.productImages.slice(0, 10) : [fallbackImage];
     const primaryImage = finalImages[0] || fallbackImage;
     const secondaryImage = finalImages[1] || primaryImage;
 
@@ -2270,19 +2331,43 @@ const Admin = {
       sizes: sizes.length > 0 ? sizes : ['M']
     };
 
-    if (this.editingProductId) {
-      window.Store.updateProduct(this.editingProductId, productPayload);
-      this.showToast(`Design "${name}" updated with ${finalImages.length} photo${finalImages.length === 1 ? '' : 's'}.`, 'success');
-    } else {
-      window.Store.addProduct(productPayload);
-      this.showToast(`Design "${name}" added to "${category}" with ${finalImages.length} photo${finalImages.length === 1 ? '' : 's'}.`, 'success');
+    const submitBtn = document.getElementById('form-product-submit-btn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      submitBtn.innerHTML = '<span class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5 align-middle"></span><span>Saving Product...</span>';
     }
 
-    this.closeModal();
-    this.renderProductsTable();
-    this.renderCategorySelectorTabs();
-    this.renderCategoriesView();
-    this.renderDashboard();
+    try {
+      console.log("[Upload Debug] Dispatching payload to /api/products...");
+
+      if (this.editingProductId) {
+        await window.Store.updateProductAsync(this.editingProductId, productPayload);
+      } else {
+        await window.Store.addProductAsync(productPayload);
+      }
+
+      // Visual Success Feedback
+      this.showToast("Product and photos uploaded successfully!", 'success');
+      alert("Product and photos uploaded successfully!");
+
+      this.closeModal();
+      this.renderProductsTable();
+      this.renderCategorySelectorTabs();
+      this.renderCategoriesView();
+      this.renderDashboard();
+    } catch (err) {
+      console.error("[Upload Debug] Product save error:", err);
+      const errMsg = err.message || 'Server error occurred while saving product';
+      this.showProductFormError(`Upload failed: ${errMsg}. Please check image format or server connection.`);
+      alert(`Upload failed: ${errMsg}. Please check image format or server connection.`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitBtn.innerHTML = this.editingProductId ? 'Update Product' : 'Save Product';
+      }
+    }
   },
 
   // ==========================================

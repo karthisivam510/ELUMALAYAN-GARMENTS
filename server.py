@@ -306,9 +306,25 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             if content_length <= 0:
                 return {}
-            raw_data = self.rfile.read(content_length).decode('utf-8')
-            return json.loads(raw_data)
-        except Exception:
+            print(f"[Server Debug] Received POST payload: {content_length} bytes")
+            # Safely read the full payload in chunks to prevent premature truncation or socket timeouts
+            chunks = []
+            bytes_read = 0
+            while bytes_read < content_length:
+                to_read = min(content_length - bytes_read, 65536)
+                chunk = self.rfile.read(to_read)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                bytes_read += len(chunk)
+            raw_data = b"".join(chunks).decode('utf-8', errors='replace')
+            try:
+                return json.loads(raw_data)
+            except json.JSONDecodeError as err:
+                print(f"[Server Debug] JSONDecodeError: {err} (received {len(raw_data)} bytes)")
+                return {}
+        except Exception as e:
+            print(f"[Server Debug] Exception reading request body: {e}")
             return {}
 
     def get_auth_token(self):
@@ -646,7 +662,7 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             price = float(body.get('price') or 0.0)
             compare_price = float(body['comparePrice']) if body.get('comparePrice') else None
 
-            # Multi-image handling
+            # Multi-image handling (up to 10 images)
             images_input = body.get('images')
             if isinstance(images_input, str):
                 try:
@@ -663,8 +679,11 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             if len(images_list) == 1 and body.get('secondaryImage') and body.get('secondaryImage') != body.get('image'):
                 images_list.append(body.get('secondaryImage'))
 
+            # Limit to maximum 10 images safely
+            images_list = [img for img in images_list if img][:10]
+
             image = images_list[0] if images_list else (body.get('image') or '')
-            secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage') or '')
+            secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage') or image)
             images_json = json.dumps(images_list)
 
             desc = body.get('description') or ''
@@ -685,7 +704,12 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             ''', (prod_id, name, category, price, compare_price, image, secondary_image, desc, details, sizes, colors, is_avail, badge, int(time.time()), now_iso, now_iso, images_json))
             conn.commit()
             conn.close()
-            return self.send_json({'success': True, 'id': prod_id}, status=201)
+            return self.send_json({
+                'status': 'success',
+                'message': 'Product saved',
+                'id': prod_id,
+                'success': True
+            }, status=200)
 
         # 8. Restore Database from Backup (ADMIN ONLY)
         if path == '/api/restore':
@@ -769,7 +793,7 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             price = float(body.get('price', existing['price']))
             compare_price = float(body['comparePrice']) if 'comparePrice' in body and body['comparePrice'] else existing['compare_price']
 
-            # Multi-image handling
+            # Multi-image handling (up to 10 images)
             if 'images' in body:
                 images_input = body['images']
                 if isinstance(images_input, str):
@@ -781,8 +805,9 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
                     images_list = images_input
                 else:
                     images_list = []
+                images_list = [img for img in images_list if img][:10]
                 image = images_list[0] if images_list else (body.get('image', existing['image']))
-                secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage', existing['secondary_image']))
+                secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage', existing['secondary_image']) or image)
                 images_json = json.dumps(images_list)
             else:
                 image = body.get('image', existing['image'])
@@ -796,6 +821,7 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
                     if secondary_image and secondary_image != image: images_list.append(secondary_image)
                 elif image and (not images_list or images_list[0] != image):
                     images_list = [image] + [img for img in images_list if img != image]
+                images_list = [img for img in images_list if img][:10]
                 images_json = json.dumps(images_list)
 
             desc = body.get('description', existing['description'])
@@ -814,7 +840,12 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             ''', (name, category, price, compare_price, image, secondary_image, desc, details, sizes, colors, is_avail, badge, now_iso, images_json, prod_id))
             conn.commit()
             conn.close()
-            return self.send_json({'success': True, 'id': prod_id})
+            return self.send_json({
+                'status': 'success',
+                'message': 'Product updated',
+                'id': prod_id,
+                'success': True
+            }, status=200)
 
         # 3. Update Category (ADMIN ONLY)
         if path.startswith('/api/categories/'):

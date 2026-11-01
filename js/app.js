@@ -282,9 +282,10 @@ const App = {
 
     // Instagram links
     document.querySelectorAll('.instagram-link').forEach(el => {
-      const handle = (settings.instagramHandle || 'elumalayan.garments').replace('@', '');
-      el.href = `https://instagram.com/${handle}`;
+      const url = settings.instagramUrl || `https://www.instagram.com/${(settings.instagramHandle || 'poorani_pattu_pavadai').replace('@', '')}`;
+      el.href = url;
       el.target = '_blank';
+      el.rel = 'noopener noreferrer';
     });
 
     // Contact info

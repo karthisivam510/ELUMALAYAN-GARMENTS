@@ -25,8 +25,8 @@ const DEFAULT_STORE_CONFIG = {
   whatsappNumber2: "",                // Number 2: Optional Secondary Dispatch
   whatsappNumber3: "",                // Number 3: Optional Support / Management
   whatsappDefaultMessage: "Hello Elumalayan Garments! I am inquiring about {product_name} ({product_price}). Is this garment currently available?",
-  instagramHandle: "elumalayan.garments",
-  instagramUrl: "https://instagram.com",
+  instagramHandle: "poorani_pattu_pavadai",
+  instagramUrl: "https://www.instagram.com/poorani_pattu_pavadai",
   
   // Contact & Concierge
   supportEmail: "contact@elumalayangarments.com",

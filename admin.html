@@ -1171,6 +1171,17 @@
         <!-- Product Form -->
         <form id="product-edit-form" onsubmit="Admin.handleProductSubmit(event)" class="space-y-6">
           
+          <!-- Visual Error Feedback Banner (Displayed if compression, file reading, or network fails) -->
+          <div id="product-form-error-banner" class="hidden p-4 bg-rose-50 border border-rose-300 text-rose-800 text-xs font-medium rounded-none flex items-start gap-3">
+            <svg class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="flex-1">
+              <span id="product-form-error-message" class="block leading-relaxed">Upload failed. Please check image format or server connection.</span>
+            </div>
+            <button type="button" onclick="Admin.clearProductFormError()" class="text-rose-500 hover:text-rose-950 font-bold text-base px-1 leading-none" aria-label="Dismiss error">×</button>
+          </div>
+          
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">Garment / Design Title *</label>
