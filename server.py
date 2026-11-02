@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-ELUMALAYAN GARMENTS - Local Development & Production Server (v3.0)
-==================================================================
-A zero-dependency Python server with built-in SQLite persistence,
-multi-WhatsApp support, REST API endpoints, and admin session security.
+ELUMALAYAN GARMENTS - Flask Commerce Server (v4.0)
+==================================================
+WSGI-compatible Flask application designed for PythonAnywhere & local execution.
+Features built-in SQLite persistence, multi-WhatsApp support, REST API endpoints,
+CORS handling, and admin session security.
 
-Usage:
+WSGI Deployment (e.g., PythonAnywhere):
+    from server import app as application
+
+Local Development:
     python server.py [port]
 """
 
@@ -17,11 +21,9 @@ import hashlib
 import secrets
 import time
 import datetime
-import webbrowser
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-from urllib.parse import urlparse, parse_qs
+from flask import Flask, request, jsonify, send_from_directory, make_response
 
-PORT = int(os.environ.get('PORT', sys.argv[1] if len(sys.argv) > 1 else 8000))
+PORT = int(os.environ.get('PORT', sys.argv[1] if len(sys.argv) > 1 and sys.argv[1].isdigit() else 8000))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, 'store.db')
 
@@ -29,6 +31,14 @@ DEFAULT_ADMIN_USER = 'admin'
 # SHA-256 of 'muse2026!'
 DEFAULT_ADMIN_HASH = '28eeb3756a9cb9c99341aa4eec16602a5c35acf53a03fd26c2be3a6ebb140fc2'
 
+# Initialize Flask App
+app = Flask(__name__, static_folder='.', static_url_path='')
+# Support up to 16MB payloads (for high-resolution images & settings)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# -------------------------------------------------------------
+# Database Setup & Migrations
+# -------------------------------------------------------------
 def get_db():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -168,8 +178,8 @@ def init_db():
             'openingHours': 'Mon – Sat: 09:30 – 21:00 | Sun: 10:00 – 20:00',
             'supportPhone': '+91 99407 73278',
             'supportEmail': 'contact@elumalayangarments.com',
-            'instagramHandle': 'elumalayan.garments',
-            'instagramUrl': 'https://instagram.com',
+            'instagramHandle': 'poorani_pattu_pavadai',
+            'instagramUrl': 'https://www.instagram.com/poorani_pattu_pavadai',
             'announcementText': 'Elumalayan Garments — Direct Delivery Across India & Custom Orders via WhatsApp',
             'showAnnouncement': '1',
             'db_initialized': '1'
@@ -276,19 +286,12 @@ def init_db():
 
     # -------------------------------------------------------------
     # Traditional Tamil Ethnic Categories Migration & Sync
-    # Migrates any legacy Western categories ("Outerwear & Coats", etc.)
-    # to the 4 Signature Collections of Elumalayan Garments:
-    # 1. Traditional Pattu Pavadai
-    # 2. Festive & Wedding Specials
-    # 3. Aari Work & Designer Pavadai
-    # 4. Little Princess Daily Ethnic Wear
     # -------------------------------------------------------------
     cursor.execute("SELECT id, name FROM categories")
     existing_cats = {r['name']: r['id'] for r in cursor.fetchall()}
-    
     legacy_keys = ["Outerwear & Coats", "Tailoring & Suits", "Dresses & Eveningwear", "Knitwear & Essentials"]
     has_legacy = any(k in existing_cats for k in legacy_keys)
-    
+
     traditional_categories = [
         ("cat-traditional", "Traditional Pattu Pavadai", "traditional-pattu-pavadai",
          "Handwoven pure silk pattu pavadai with rich zari borders & traditional motifs",
@@ -308,18 +311,18 @@ def init_db():
     if has_legacy or len(existing_cats) == 0:
         for lk in legacy_keys:
             cursor.execute("DELETE FROM categories WHERE name = ?", (lk,))
-        
+
         for cat in traditional_categories:
             cursor.execute('''
                 INSERT OR REPLACE INTO categories (id, name, slug, subtitle, image, enabled, sort_order, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (*cat, now_iso))
-        
+
         cursor.execute("UPDATE products SET category = 'Traditional Pattu Pavadai' WHERE category = 'Outerwear & Coats'")
         cursor.execute("UPDATE products SET category = 'Festive & Wedding Specials' WHERE category = 'Tailoring & Suits'")
         cursor.execute("UPDATE products SET category = 'Aari Work & Designer Pavadai' WHERE category = 'Dresses & Eveningwear'")
         cursor.execute("UPDATE products SET category = 'Little Princess Daily Ethnic Wear' WHERE category = 'Knitwear & Essentials'")
-        
+
         cursor.execute("""
             UPDATE products SET 
                 name = 'Salem Pure Kanchipuram Silk Pattu Pavadai',
@@ -384,674 +387,673 @@ def init_db():
     conn.commit()
     conn.close()
 
-class AtelierRequestHandler(SimpleHTTPRequestHandler):
-    def end_headers(self):
-        # Enable CORS and disable aggressive caching for real-time development
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        super().end_headers()
+# Initialize DB immediately on module import so it's ready for both WSGI and CLI
+init_db()
 
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.end_headers()
+# -------------------------------------------------------------
+# Request Helpers & CORS
+# -------------------------------------------------------------
+@app.before_request
+def handle_options_and_charset():
+    if request.method == 'OPTIONS':
+        res = make_response('', 200)
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        res.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        res.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-Token'
+        return res
 
-    def send_json(self, data, status=200):
-        body = json.dumps(data, ensure_ascii=False).encode('utf-8')
-        self.send_response(status)
-        self.send_header('Content-Type', 'application/json; charset=utf-8')
-        self.send_header('Content-Length', str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-Token'
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
 
-    def read_json_body(self):
-        try:
-            content_length = int(self.headers.get('Content-Length', 0))
-            if content_length <= 0:
-                return {}
-            print(f"[Server Debug] Received POST payload: {content_length} bytes")
-            # Safely read the full payload in chunks to prevent premature truncation or socket timeouts
-            chunks = []
-            bytes_read = 0
-            while bytes_read < content_length:
-                to_read = min(content_length - bytes_read, 65536)
-                chunk = self.rfile.read(to_read)
-                if not chunk:
-                    break
-                chunks.append(chunk)
-                bytes_read += len(chunk)
-            raw_data = b"".join(chunks).decode('utf-8', errors='replace')
-            try:
-                return json.loads(raw_data)
-            except json.JSONDecodeError as err:
-                print(f"[Server Debug] JSONDecodeError: {err} (received {len(raw_data)} bytes)")
-                return {}
-        except Exception as e:
-            print(f"[Server Debug] Exception reading request body: {e}")
-            return {}
+def get_request_json():
+    data = request.get_json(silent=True)
+    if data is not None and isinstance(data, (dict, list)):
+        return data
+    try:
+        raw = request.get_data(as_text=True)
+        if raw:
+            return json.loads(raw)
+    except Exception:
+        pass
+    return {}
 
-    def get_auth_token(self):
-        auth_header = self.headers.get('Authorization', '')
-        if auth_header.startswith('Bearer '):
-            return auth_header[7:].strip()
-        x_token = self.headers.get('X-Admin-Token', '')
-        if x_token:
-            return x_token.strip()
-        return None
+def get_auth_token():
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        return auth_header[7:].strip()
+    x_token = request.headers.get('X-Admin-Token', '')
+    if x_token:
+        return x_token.strip()
+    return None
 
-    def is_authenticated(self):
-        token = self.get_auth_token()
-        if not token:
-            return False
+def is_authenticated():
+    token = get_auth_token()
+    if not token:
+        return False
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT username, expires_at FROM admin_sessions WHERE token = ?', (token,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return False
+    if row['expires_at'] < time.time():
+        return False
+    return True
+
+# -------------------------------------------------------------
+# Static Routes
+# -------------------------------------------------------------
+@app.route('/')
+@app.route('/index.html')
+def serve_index():
+    return send_from_directory(BASE_DIR, 'index.html')
+
+@app.route('/admin.html')
+def serve_admin():
+    return send_from_directory(BASE_DIR, 'admin.html')
+
+# -------------------------------------------------------------
+# REST API Endpoints
+# -------------------------------------------------------------
+
+# 1. Health Check
+@app.route('/api/health', methods=['GET'])
+def api_health():
+    return jsonify({
+        'status': 'online',
+        'store': 'Elumalayan Garments',
+        'version': '4.0 (Flask/WSGI)',
+        'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
+    })
+
+# 2. Authentication: Login
+@app.route('/api/auth/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    body = get_request_json()
+    username = (body.get('username') or '').strip().lower()
+    password = body.get('password') or ''
+    remember = bool(body.get('remember', False))
+
+    pwd_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT username, password_hash, role FROM auth_users WHERE LOWER(username) = ?', (username,))
+    user = cursor.fetchone()
+
+    if not user or user['password_hash'] != pwd_hash:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Invalid username or password.'}), 401
+
+    token = 'eluma_sec_' + secrets.token_hex(20)
+    ttl = (30 * 86400) if remember else (12 * 3600)
+    expires_at = time.time() + ttl
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    cursor.execute('INSERT INTO admin_sessions (token, username, expires_at, created_at) VALUES (?, ?, ?, ?)',
+                   (token, user['username'], expires_at, now_iso))
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'success': True,
+        'token': token,
+        'user': {
+            'username': user['username'],
+            'role': user['role'],
+            'expiresAt': int(expires_at * 1000)
+        }
+    })
+
+# 3. Authentication: Verify
+@app.route('/api/auth/verify', methods=['POST'])
+def api_verify():
+    valid = is_authenticated()
+    return jsonify({'success': True, 'valid': valid}), (200 if valid else 401)
+
+# 4. Authentication: Logout
+@app.route('/api/auth/logout', methods=['POST'])
+def api_logout():
+    token = get_auth_token()
+    if token:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute('DELETE FROM admin_sessions WHERE token = ?', (token,))
+        conn.commit()
+        conn.close()
+    return jsonify({'success': True, 'message': 'Logged out successfully.'})
+
+# 5. Authentication: Change Password
+@app.route('/api/auth/change-password', methods=['POST'])
+def api_change_password():
+    if not is_authenticated():
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    body = get_request_json()
+    old_pass = body.get('oldPassword') or ''
+    new_pass = body.get('newPassword') or ''
+    if len(new_pass) < 6:
+        return jsonify({'success': False, 'message': 'Password must be at least 6 characters.'}), 400
+    old_hash = hashlib.sha256(old_pass.encode('utf-8')).hexdigest()
+    new_hash = hashlib.sha256(new_pass.encode('utf-8')).hexdigest()
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT username FROM auth_users WHERE password_hash = ?', (old_hash,))
+    if not c.fetchone():
+        conn.close()
+        return jsonify({'success': False, 'message': 'Current password is incorrect.'}), 400
+    c.execute('UPDATE auth_users SET password_hash = ?', (new_hash,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'message': 'Password successfully changed.'})
+
+# 6. Store Settings (GET / POST)
+@app.route('/api/settings', methods=['GET', 'POST'])
+def api_settings():
+    if request.method == 'GET':
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('SELECT username, expires_at FROM admin_sessions WHERE token = ?', (token,))
-        row = cursor.fetchone()
+        cursor.execute('SELECT key, value FROM settings')
+        rows = cursor.fetchall()
         conn.close()
-        if not row:
-            return False
-        if row['expires_at'] < time.time():
-            # Session expired
-            return False
-        return True
+        settings = {r['key']: r['value'] for r in rows}
+        return jsonify(settings)
 
-    # -------------------------------------------------------------
-    # GET REQUEST ROUTER
-    # -------------------------------------------------------------
-    def do_GET(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
+    # POST: Update settings (ADMIN ONLY with validation whitelist)
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized: Admin authentication required.'}), 401
 
-        # 1. Health Check
-        if path == '/api/health':
-            return self.send_json({
-                'status': 'online',
-                'store': 'Elumalayan Garments',
-                'version': '3.0',
-                'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
-            })
+    ALLOWED_SETTINGS_KEYS = {
+        'storeName', 'brandName', 'subtitle', 'tagline', 'subBadge', 'established',
+        'currencySymbol', 'currencyCode', 'taxIncluded', 'freeShippingThreshold',
+        'whatsappNumber', 'whatsappNumber2', 'whatsappNumber3', 'whatsappDefaultMessage',
+        'instagramHandle', 'instagramUrl', 'supportEmail', 'supportPhone', 'address', 'openingHours',
+        'announcementText', 'showAnnouncement',
+        'festivalAutoMode', 'festivalActiveOverride', 'festivalOverrideUntil',
+        'festivalCustomBanner', 'festivalCustomDates',
+        'brandLogo', 'favicon', 'categoryBanners', 'site_settings'
+    }
 
-        # 2. Get Public Settings
-        if path == '/api/settings':
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT key, value FROM settings')
-            rows = cursor.fetchall()
-            conn.close()
-            settings = {r['key']: r['value'] for r in rows}
-            return self.send_json(settings)
+    body = get_request_json()
+    conn = get_db()
+    cursor = conn.cursor()
+    for k, v in body.items():
+        k_str = str(k).strip()
+        if k_str in ALLOWED_SETTINGS_KEYS:
+            v_str = json.dumps(v) if isinstance(v, (dict, list)) else str(v)
+            if len(v_str) > 2500000:
+                v_str = v_str[:2500000]
+            cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (k_str, v_str))
+    conn.commit()
+    cursor.execute('SELECT key, value FROM settings')
+    updated = {r['key']: r['value'] for r in cursor.fetchall()}
+    conn.close()
+    return jsonify({
+        'success': True,
+        'settings': updated,
+        **updated
+    })
 
-        # 3. Get Products (Public)
-        if path == '/api/products':
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM products ORDER BY sort_order ASC, created_at DESC')
-            rows = cursor.fetchall()
-            conn.close()
-            products = []
-            for r in rows:
-                p = dict(r)
-                p['sizes'] = json.loads(p['sizes']) if p['sizes'] else []
-                p['colors'] = json.loads(p['colors']) if p['colors'] else []
-                p['isAvailable'] = bool(p['is_available'])
-                p['comparePrice'] = p['compare_price']
-                del p['is_available']
-                del p['compare_price']
+# 7. Products: List & Create
+@app.route('/api/products', methods=['GET', 'POST', 'PUT'])
+def api_products_collection():
+    if request.method == 'GET':
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM products ORDER BY sort_order ASC, created_at DESC')
+        rows = cursor.fetchall()
+        conn.close()
+        products = []
+        for r in rows:
+            p = dict(r)
+            p['sizes'] = json.loads(p['sizes']) if p['sizes'] else []
+            p['colors'] = json.loads(p['colors']) if p['colors'] else []
+            p['isAvailable'] = bool(p['is_available'])
+            p['comparePrice'] = p['compare_price']
+            del p['is_available']
+            del p['compare_price']
 
-                # Images array parsing & legacy fallback
-                imgs = []
-                if p.get('images'):
-                    try:
-                        imgs = json.loads(p['images']) if isinstance(p['images'], str) else p['images']
-                    except Exception:
-                        imgs = []
-                if not imgs:
-                    if p.get('image'):
-                        imgs.append(p['image'])
-                    if p.get('secondary_image') and p['secondary_image'] != p.get('image'):
-                        imgs.append(p['secondary_image'])
-                p['images'] = imgs
-                p['image'] = imgs[0] if imgs else (p.get('image') or '')
-                p['secondaryImage'] = imgs[1] if len(imgs) > 1 else (p.get('secondary_image') or '')
-                if 'secondary_image' in p:
-                    del p['secondary_image']
-                products.append(p)
-            return self.send_json(products)
-
-        # 4. Get Categories (Public)
-        if path == '/api/categories':
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM categories ORDER BY sort_order ASC')
-            rows = cursor.fetchall()
-            conn.close()
-            categories = []
-            for r in rows:
-                c = dict(r)
-                c['enabled'] = bool(c['enabled'])
-                categories.append(c)
-            return self.send_json(categories)
-
-        # 5. Get Orders (ADMIN ONLY - Sensitive customer data protection)
-        if path == '/api/orders':
-            if not self.is_authenticated():
-                return self.send_json({
-                    'success': False,
-                    'error': 'Unauthorized: Administrator authentication required to view customer orders.'
-                }, status=401)
-
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM orders ORDER BY created_at DESC')
-            rows = cursor.fetchall()
-            conn.close()
-            orders = []
-            for r in rows:
-                o = dict(r)
-                o['customerName'] = o['customer_name']
-                o['totalPrice'] = o['total_price']
-                o['createdAt'] = o['created_at']
-                o['updatedAt'] = o.get('updated_at')
+            # Images array parsing & legacy fallback
+            imgs = []
+            if p.get('images'):
                 try:
-                    o['items'] = json.loads(o['items']) if o['items'] else []
+                    imgs = json.loads(p['images']) if isinstance(p['images'], str) else p['images']
                 except Exception:
-                    o['items'] = []
-                del o['customer_name']
-                del o['total_price']
-                del o['created_at']
-                orders.append(o)
-            return self.send_json(orders)
+                    imgs = []
+            if not imgs:
+                if p.get('image'):
+                    imgs.append(p['image'])
+                if p.get('secondary_image') and p['secondary_image'] != p.get('image'):
+                    imgs.append(p['secondary_image'])
+            p['images'] = imgs
+            p['image'] = imgs[0] if imgs else (p.get('image') or '')
+            p['secondaryImage'] = imgs[1] if len(imgs) > 1 else (p.get('secondary_image') or '')
+            if 'secondary_image' in p:
+                del p['secondary_image']
+            products.append(p)
+        return jsonify(products)
 
-        # 6. Database Full Backup (ADMIN ONLY)
-        if path == '/api/backup':
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
-            conn = get_db()
-            c = conn.cursor()
-            c.execute('SELECT * FROM products')
-            prods = [dict(r) for r in c.fetchall()]
-            c.execute('SELECT * FROM categories')
-            cats = [dict(r) for r in c.fetchall()]
-            c.execute('SELECT * FROM orders')
-            ords = [dict(r) for r in c.fetchall()]
-            c.execute('SELECT * FROM settings')
-            sets = {r['key']: r['value'] for r in c.fetchall()}
-            conn.close()
-            return self.send_json({
-                'exportedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                'products': prods,
-                'categories': cats,
-                'orders': ords,
-                'settings': sets
-            })
+    # POST or PUT (collection level) requires Admin Authentication
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
-        # Static assets (HTML, CSS, JS, etc.)
-        return super().do_GET()
+    body = get_request_json()
 
-    # -------------------------------------------------------------
-    # POST REQUEST ROUTER
-    # -------------------------------------------------------------
-    def do_POST(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-        body = self.read_json_body()
+    # If PUT with an ID in the body, delegate to update logic
+    if request.method == 'PUT':
+        prod_id = body.get('id')
+        if not prod_id:
+            return jsonify({'success': False, 'error': 'Missing product ID for update'}), 400
+        return update_product_record(prod_id, body)
 
-        # 1. Admin Authentication Login
-        if path == '/api/auth/login':
-            username = (body.get('username') or '').strip().lower()
-            password = body.get('password') or ''
-            remember = bool(body.get('remember', False))
+    # POST: Add new product
+    name = (body.get('name') or 'Untitled Garment').strip()
+    category = body.get('category') or 'Traditional Pattu Pavadai'
+    price = float(body.get('price') or 0.0)
+    compare_price = float(body['comparePrice']) if body.get('comparePrice') else None
 
-            pwd_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT username, password_hash, role FROM auth_users WHERE LOWER(username) = ?', (username,))
-            user = cursor.fetchone()
-
-            if not user or user['password_hash'] != pwd_hash:
-                conn.close()
-                return self.send_json({'success': False, 'message': 'Invalid username or password.'}, status=401)
-
-            # Generate cryptographically secure session token
-            token = 'eluma_sec_' + secrets.token_hex(20)
-            ttl = (30 * 86400) if remember else (12 * 3600)
-            expires_at = time.time() + ttl
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-            cursor.execute('INSERT INTO admin_sessions (token, username, expires_at, created_at) VALUES (?, ?, ?, ?)',
-                           (token, user['username'], expires_at, now_iso))
-            conn.commit()
-            conn.close()
-
-            return self.send_json({
-                'success': True,
-                'token': token,
-                'user': {
-                    'username': user['username'],
-                    'role': user['role'],
-                    'expiresAt': int(expires_at * 1000)
-                }
-            })
-
-        # 2. Verify Session
-        if path == '/api/auth/verify':
-            is_valid = self.is_authenticated()
-            return self.send_json({'success': True, 'valid': is_valid}, status=200 if is_valid else 401)
-
-        # 3. Logout
-        if path == '/api/auth/logout':
-            token = self.get_auth_token()
-            if token:
-                conn = get_db()
-                c = conn.cursor()
-                c.execute('DELETE FROM admin_sessions WHERE token = ?', (token,))
-                conn.commit()
-                conn.close()
-            return self.send_json({'success': True, 'message': 'Logged out successfully.'})
-
-        # 4. Change Admin Password
-        if path == '/api/auth/change-password':
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'message': 'Unauthorized'}, status=401)
-            old_pass = body.get('oldPassword') or ''
-            new_pass = body.get('newPassword') or ''
-            if len(new_pass) < 6:
-                return self.send_json({'success': False, 'message': 'Password must be at least 6 characters.'}, status=400)
-            old_hash = hashlib.sha256(old_pass.encode('utf-8')).hexdigest()
-            new_hash = hashlib.sha256(new_pass.encode('utf-8')).hexdigest()
-            conn = get_db()
-            c = conn.cursor()
-            c.execute('SELECT username FROM auth_users WHERE password_hash = ?', (old_hash,))
-            if not c.fetchone():
-                conn.close()
-                return self.send_json({'success': False, 'message': 'Current password is incorrect.'}, status=400)
-            c.execute('UPDATE auth_users SET password_hash = ?', (new_hash,))
-            conn.commit()
-            conn.close()
-            return self.send_json({'success': True, 'message': 'Password successfully changed.'})
-
-        # 5. Place Customer Order (PUBLIC - Saves order once into database)
-        if path == '/api/orders':
-            customer_name = (body.get('customerName') or body.get('customer_name') or '').strip()
-            mobile = (body.get('mobile') or '').strip()
-            whatsapp = (body.get('whatsapp') or mobile).strip()
-            email = (body.get('email') or '').strip()
-            address = (body.get('address') or '').strip()
-            items = body.get('items') or []
-            total_price = float(body.get('totalPrice') or body.get('total_price') or 0.0)
-
-            if not customer_name:
-                customer_name = 'Direct WhatsApp Guest'
-            if not mobile and not whatsapp:
-                mobile = 'Via WhatsApp Chat'
-                whatsapp = 'Via WhatsApp Chat'
-
-            order_id = body.get('id')
-            if not order_id or not str(order_id).startswith('ord-'):
-                order_id = f"ord-{int(time.time() * 1000) % 1000000}"
-
-            created_at = body.get('createdAt') or datetime.datetime.now(datetime.timezone.utc).isoformat()
-            items_str = json.dumps(items)
-
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT OR REPLACE INTO orders 
-                (id, customer_name, mobile, whatsapp, email, address, items, total_price, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (order_id, customer_name, mobile, whatsapp, email, address, items_str, total_price, 'New', created_at, created_at))
-            conn.commit()
-            conn.close()
-
-            order_obj = {
-                'id': order_id,
-                'customerName': customer_name,
-                'mobile': mobile,
-                'whatsapp': whatsapp,
-                'email': email,
-                'address': address,
-                'items': items,
-                'totalPrice': total_price,
-                'status': 'New',
-                'createdAt': created_at
-            }
-            return self.send_json({
-                'success': True,
-                'order': order_obj,
-                **order_obj
-            }, status=201)
-
-        # 6. Update Store Settings (ADMIN ONLY with validation)
-        if path == '/api/settings':
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized: Admin authentication required.'}, status=401)
-            
-            ALLOWED_SETTINGS_KEYS = {
-                'storeName', 'brandName', 'subtitle', 'tagline', 'subBadge', 'established',
-                'currencySymbol', 'currencyCode', 'taxIncluded', 'freeShippingThreshold',
-                'whatsappNumber', 'whatsappNumber2', 'whatsappNumber3', 'whatsappDefaultMessage',
-                'instagramHandle', 'instagramUrl', 'supportEmail', 'supportPhone', 'address', 'openingHours',
-                'announcementText', 'showAnnouncement',
-                'festivalAutoMode', 'festivalActiveOverride', 'festivalOverrideUntil',
-                'festivalCustomBanner', 'festivalCustomDates',
-                'brandLogo', 'favicon', 'categoryBanners', 'site_settings'
-            }
-
-            conn = get_db()
-            cursor = conn.cursor()
-            for k, v in body.items():
-                k_str = str(k).strip()
-                if k_str in ALLOWED_SETTINGS_KEYS:
-                    v_str = json.dumps(v) if isinstance(v, (dict, list)) else str(v)
-                    if len(v_str) > 2500000:
-                        v_str = v_str[:2500000]
-                    cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (k_str, v_str))
-            conn.commit()
-            cursor.execute('SELECT key, value FROM settings')
-            updated = {r['key']: r['value'] for r in cursor.fetchall()}
-            conn.close()
-            return self.send_json({
-                'success': True,
-                'settings': updated,
-                **updated
-            })
-
-        # 7. Add Product (ADMIN ONLY)
-        if path == '/api/products':
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
-            name = (body.get('name') or 'Untitled Garment').strip()
-            category = body.get('category') or 'Traditional Pattu Pavadai'
-            price = float(body.get('price') or 0.0)
-            compare_price = float(body['comparePrice']) if body.get('comparePrice') else None
-
-            # Multi-image handling (up to 10 images)
-            images_input = body.get('images')
-            if isinstance(images_input, str):
-                try:
-                    images_list = json.loads(images_input)
-                except Exception:
-                    images_list = [images_input] if images_input else []
-            elif isinstance(images_input, list):
-                images_list = images_input
-            else:
-                images_list = []
-
-            if not images_list and body.get('image'):
-                images_list.append(body.get('image'))
-            if len(images_list) == 1 and body.get('secondaryImage') and body.get('secondaryImage') != body.get('image'):
-                images_list.append(body.get('secondaryImage'))
-
-            # Limit to maximum 10 images safely
-            images_list = [img for img in images_list if img][:10]
-
-            image = images_list[0] if images_list else (body.get('image') or '')
-            secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage') or image)
-            images_json = json.dumps(images_list)
-
-            desc = body.get('description') or ''
-            details = body.get('details') or ''
-            sizes = json.dumps(body.get('sizes') or ['M'])
-            colors = json.dumps(body.get('colors') or [{"name": "Default", "hex": "#111111"}])
-            is_avail = 1 if body.get('isAvailable', True) else 0
-            badge = body.get('badge')
-            prod_id = body.get('id') or f"prod-{int(time.time()*1000)%1000000}"
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO products 
-                (id, name, category, price, compare_price, image, secondary_image, description, details, sizes, colors, is_available, badge, sort_order, created_at, updated_at, images)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (prod_id, name, category, price, compare_price, image, secondary_image, desc, details, sizes, colors, is_avail, badge, int(time.time()), now_iso, now_iso, images_json))
-            conn.commit()
-            conn.close()
-            return self.send_json({
-                'status': 'success',
-                'message': 'Product saved',
-                'id': prod_id,
-                'success': True
-            }, status=200)
-
-        # 8. Restore Database from Backup (ADMIN ONLY)
-        if path == '/api/restore':
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
-            prods = body.get('products') or []
-            ords = body.get('orders') or []
-            sets = body.get('settings') or {}
-            conn = get_db()
-            c = conn.cursor()
-            if sets:
-                for k, v in sets.items():
-                    c.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (str(k), str(v)))
-            if prods:
-                c.execute('DELETE FROM products')
-                for p in prods:
-                    imgs_str = json.dumps(p.get('images')) if isinstance(p.get('images'), list) else (p.get('images') or '[]')
-                    c.execute('''
-                        INSERT OR REPLACE INTO products
-                        (id, name, category, price, compare_price, image, secondary_image, description, details, sizes, colors, is_available, badge, sort_order, created_at, images)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (p['id'], p['name'], p['category'], p['price'], p.get('compare_price'), p.get('image'), p.get('secondary_image'), p.get('description'), p.get('details'), p.get('sizes'), p.get('colors'), p.get('is_available', 1), p.get('badge'), p.get('sort_order', 0), p.get('created_at'), imgs_str))
-            if ords:
-                c.execute('DELETE FROM orders')
-                for o in ords:
-                    c.execute('''
-                        INSERT OR REPLACE INTO orders
-                        (id, customer_name, mobile, whatsapp, email, address, items, total_price, status, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (o['id'], o['customer_name'], o['mobile'], o['whatsapp'], o.get('email'), o.get('address'), o['items'], o['total_price'], o.get('status', 'New'), o.get('created_at')))
-            conn.commit()
-            conn.close()
-            return self.send_json({'success': True, 'message': 'Database restored successfully.'})
-
-        return self.send_json({'error': 'Not Found'}, status=404)
-
-    # -------------------------------------------------------------
-    # PUT REQUEST ROUTER
-    # -------------------------------------------------------------
-    def do_PUT(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-        body = self.read_json_body()
-
-        # 1. Update Order Status (ADMIN ONLY)
-        if path.startswith('/api/orders/') and path.endswith('/status'):
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
-            parts = path.split('/')
-            order_id = parts[3]
-            new_status = (body.get('status') or 'New').strip()
-
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM orders WHERE id = ?', (order_id,))
-            if not cursor.fetchone():
-                conn.close()
-                return self.send_json({'success': False, 'error': f'Order #{order_id} not found.'}, status=404)
-
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-            cursor.execute('UPDATE orders SET status = ?, updated_at = ? WHERE id = ?', (new_status, now_iso, order_id))
-            conn.commit()
-            conn.close()
-            return self.send_json({'success': True, 'id': order_id, 'status': new_status})
-
-        # 2. Update Product (ADMIN ONLY)
-        if path.startswith('/api/products/'):
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
-            prod_id = path[len('/api/products/'):]
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM products WHERE id = ?', (prod_id,))
-            existing = cursor.fetchone()
-            if not existing:
-                conn.close()
-                return self.send_json({'success': False, 'error': 'Product not found'}, status=404)
-
-            name = body.get('name', existing['name'])
-            category = body.get('category', existing['category'])
-            price = float(body.get('price', existing['price']))
-            compare_price = float(body['comparePrice']) if 'comparePrice' in body and body['comparePrice'] else existing['compare_price']
-
-            # Multi-image handling (up to 10 images)
-            if 'images' in body:
-                images_input = body['images']
-                if isinstance(images_input, str):
-                    try:
-                        images_list = json.loads(images_input)
-                    except Exception:
-                        images_list = [images_input] if images_input else []
-                elif isinstance(images_input, list):
-                    images_list = images_input
-                else:
-                    images_list = []
-                images_list = [img for img in images_list if img][:10]
-                image = images_list[0] if images_list else (body.get('image', existing['image']))
-                secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage', existing['secondary_image']) or image)
-                images_json = json.dumps(images_list)
-            else:
-                image = body.get('image', existing['image'])
-                secondary_image = body.get('secondaryImage', existing['secondary_image'])
-                try:
-                    images_list = json.loads(existing['images']) if existing['images'] else []
-                except Exception:
-                    images_list = []
-                if not images_list:
-                    if image: images_list.append(image)
-                    if secondary_image and secondary_image != image: images_list.append(secondary_image)
-                elif image and (not images_list or images_list[0] != image):
-                    images_list = [image] + [img for img in images_list if img != image]
-                images_list = [img for img in images_list if img][:10]
-                images_json = json.dumps(images_list)
-
-            desc = body.get('description', existing['description'])
-            details = body.get('details', existing['details'])
-            sizes = json.dumps(body.get('sizes')) if 'sizes' in body else existing['sizes']
-            colors = json.dumps(body.get('colors')) if 'colors' in body else existing['colors']
-            is_avail = (1 if body['isAvailable'] else 0) if 'isAvailable' in body else existing['is_available']
-            badge = body.get('badge', existing['badge'])
-            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-            cursor.execute('''
-                UPDATE products SET
-                name=?, category=?, price=?, compare_price=?, image=?, secondary_image=?,
-                description=?, details=?, sizes=?, colors=?, is_available=?, badge=?, updated_at=?, images=?
-                WHERE id=?
-            ''', (name, category, price, compare_price, image, secondary_image, desc, details, sizes, colors, is_avail, badge, now_iso, images_json, prod_id))
-            conn.commit()
-            conn.close()
-            return self.send_json({
-                'status': 'success',
-                'message': 'Product updated',
-                'id': prod_id,
-                'success': True
-            }, status=200)
-
-        # 3. Update Category (ADMIN ONLY)
-        if path.startswith('/api/categories/'):
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
-            cat_id = path[len('/api/categories/'):]
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM categories WHERE id = ?', (cat_id,))
-            existing = cursor.fetchone()
-            if not existing:
-                conn.close()
-                return self.send_json({'success': False, 'error': 'Category not found'}, status=404)
-
-            name = body.get('name', existing['name'])
-            subtitle = body.get('subtitle', existing['subtitle'])
-            image = body.get('image', existing['image'])
-            enabled = (1 if body['enabled'] else 0) if 'enabled' in body else existing['enabled']
-            sort_order = int(body.get('sort_order', existing['sort_order']))
-
-            cursor.execute('''
-                UPDATE categories SET name=?, subtitle=?, image=?, enabled=?, sort_order=? WHERE id=?
-            ''', (name, subtitle, image, enabled, sort_order, cat_id))
-            conn.commit()
-            conn.close()
-            return self.send_json({'success': True, 'id': cat_id})
-
-        return self.send_json({'error': 'Not Found'}, status=404)
-
-    # -------------------------------------------------------------
-    # DELETE REQUEST ROUTER (ORDER & PRODUCT DELETION)
-    # -------------------------------------------------------------
-    def do_DELETE(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-
-        # 1. DELETE CUSTOMER ORDER (ADMIN ONLY)
-        # Fixes the core order deletion bug by providing authoritative,
-        # authenticated SQLite database removal with clear success/error verification.
-        if path.startswith('/api/orders/'):
-            if not self.is_authenticated():
-                return self.send_json({
-                    'success': False,
-                    'error': 'Unauthorized: Administrator authentication required to delete orders.'
-                }, status=401)
-
-            order_id = path[len('/api/orders/'):].strip()
-            if not order_id:
-                return self.send_json({'success': False, 'error': 'Invalid or missing Order ID.'}, status=400)
-
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('SELECT id, customer_name FROM orders WHERE id = ?', (order_id,))
-            order_row = cursor.fetchone()
-
-            if not order_row:
-                conn.close()
-                return self.send_json({
-                    'success': False,
-                    'error': f'Order #{order_id} does not exist or has already been deleted.'
-                }, status=404)
-
-            # Permanently delete the order record from SQLite
-            cursor.execute('DELETE FROM orders WHERE id = ?', (order_id,))
-            conn.commit()
-            conn.close()
-
-            return self.send_json({
-                'success': True,
-                'message': f'Order #{order_id} for {order_row["customer_name"]} permanently deleted.',
-                'deletedId': order_id
-            }, status=200)
-
-        # 2. DELETE PRODUCT (ADMIN ONLY)
-        if path.startswith('/api/products/'):
-            if not self.is_authenticated():
-                return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
-            prod_id = path[len('/api/products/'):].strip()
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('DELETE FROM products WHERE id = ?', (prod_id,))
-            conn.commit()
-            conn.close()
-            return self.send_json({'success': True, 'deletedId': prod_id})
-
-        return self.send_json({'error': 'Not Found'}, status=404)
-
-def run_server():
-    if hasattr(sys.stdout, 'reconfigure'):
+    # Multi-image handling (up to 10 images)
+    images_input = body.get('images')
+    if isinstance(images_input, str):
         try:
-            sys.stdout.reconfigure(encoding='utf-8')
+            images_list = json.loads(images_input)
         except Exception:
-            pass
+            images_list = [images_input] if images_input else []
+    elif isinstance(images_input, list):
+        images_list = images_input
+    else:
+        images_list = []
 
-    init_db()
-    server_address = ('', PORT)
-    httpd = HTTPServer(server_address, AtelierRequestHandler)
+    if not images_list and body.get('image'):
+        images_list.append(body.get('image'))
+    if len(images_list) == 1 and body.get('secondaryImage') and body.get('secondaryImage') != body.get('image'):
+        images_list.append(body.get('secondaryImage'))
 
+    images_list = [img for img in images_list if img][:10]
+    image = images_list[0] if images_list else (body.get('image') or '')
+    secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage') or image)
+    images_json = json.dumps(images_list)
+
+    desc = body.get('description') or ''
+    details = body.get('details') or ''
+    sizes = json.dumps(body.get('sizes') or ['M'])
+    colors = json.dumps(body.get('colors') or [{"name": "Default", "hex": "#111111"}])
+    is_avail = 1 if body.get('isAvailable', True) else 0
+    badge = body.get('badge')
+    prod_id = body.get('id') or f"prod-{int(time.time()*1000)%1000000}"
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO products 
+        (id, name, category, price, compare_price, image, secondary_image, description, details, sizes, colors, is_available, badge, sort_order, created_at, updated_at, images)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (prod_id, name, category, price, compare_price, image, secondary_image, desc, details, sizes, colors, is_avail, badge, int(time.time()), now_iso, now_iso, images_json))
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'status': 'success',
+        'message': 'Product saved',
+        'id': prod_id,
+        'success': True
+    }), 200
+
+def update_product_record(prod_id, body):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM products WHERE id = ?', (prod_id,))
+    existing = cursor.fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Product not found'}), 404
+
+    name = body.get('name', existing['name'])
+    category = body.get('category', existing['category'])
+    price = float(body.get('price', existing['price']))
+    compare_price = float(body['comparePrice']) if 'comparePrice' in body and body['comparePrice'] else existing['compare_price']
+
+    # Multi-image handling (up to 10 images)
+    if 'images' in body:
+        images_input = body['images']
+        if isinstance(images_input, str):
+            try:
+                images_list = json.loads(images_input)
+            except Exception:
+                images_list = [images_input] if images_input else []
+        elif isinstance(images_input, list):
+            images_list = images_input
+        else:
+            images_list = []
+        images_list = [img for img in images_list if img][:10]
+        image = images_list[0] if images_list else (body.get('image', existing['image']))
+        secondary_image = images_list[1] if len(images_list) > 1 else (body.get('secondaryImage', existing['secondary_image']) or image)
+        images_json = json.dumps(images_list)
+    else:
+        image = body.get('image', existing['image'])
+        secondary_image = body.get('secondaryImage', existing['secondary_image'])
+        try:
+            images_list = json.loads(existing['images']) if existing['images'] else []
+        except Exception:
+            images_list = []
+        if not images_list:
+            if image: images_list.append(image)
+            if secondary_image and secondary_image != image: images_list.append(secondary_image)
+        elif image and (not images_list or images_list[0] != image):
+            images_list = [image] + [img for img in images_list if img != image]
+        images_list = [img for img in images_list if img][:10]
+        images_json = json.dumps(images_list)
+
+    desc = body.get('description', existing['description'])
+    details = body.get('details', existing['details'])
+    sizes = json.dumps(body.get('sizes')) if 'sizes' in body else existing['sizes']
+    colors = json.dumps(body.get('colors')) if 'colors' in body else existing['colors']
+    is_avail = (1 if body['isAvailable'] else 0) if 'isAvailable' in body else existing['is_available']
+    badge = body.get('badge', existing['badge'])
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    cursor.execute('''
+        UPDATE products SET
+        name=?, category=?, price=?, compare_price=?, image=?, secondary_image=?,
+        description=?, details=?, sizes=?, colors=?, is_available=?, badge=?, updated_at=?, images=?
+        WHERE id=?
+    ''', (name, category, price, compare_price, image, secondary_image, desc, details, sizes, colors, is_avail, badge, now_iso, images_json, prod_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'status': 'success',
+        'message': 'Product updated',
+        'id': prod_id,
+        'success': True
+    }), 200
+
+# 8. Products: Item Operations (PUT / DELETE)
+@app.route('/api/products/<path:product_id>', methods=['PUT', 'DELETE'])
+def api_product_item(product_id):
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    if request.method == 'PUT':
+        body = get_request_json()
+        return update_product_record(product_id, body)
+
+    if request.method == 'DELETE':
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM products WHERE id = ?', (product_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'deletedId': product_id}), 200
+
+# 9. Categories: List & Update
+@app.route('/api/categories', methods=['GET'])
+def api_categories_list():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM categories ORDER BY sort_order ASC')
+    rows = cursor.fetchall()
+    conn.close()
+    categories = []
+    for r in rows:
+        c = dict(r)
+        c['enabled'] = bool(c['enabled'])
+        categories.append(c)
+    return jsonify(categories)
+
+@app.route('/api/categories/<path:cat_id>', methods=['PUT'])
+def api_category_update(cat_id):
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    body = get_request_json()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM categories WHERE id = ?', (cat_id,))
+    existing = cursor.fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Category not found'}), 404
+
+    name = body.get('name', existing['name'])
+    subtitle = body.get('subtitle', existing['subtitle'])
+    image = body.get('image', existing['image'])
+    enabled = (1 if body['enabled'] else 0) if 'enabled' in body else existing['enabled']
+    sort_order = int(body.get('sort_order', existing['sort_order']))
+
+    cursor.execute('''
+        UPDATE categories SET name=?, subtitle=?, image=?, enabled=?, sort_order=? WHERE id=?
+    ''', (name, subtitle, image, enabled, sort_order, cat_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'id': cat_id})
+
+# 10. Orders: List (Admin) & Place Order (Public)
+@app.route('/api/orders', methods=['GET', 'POST'])
+def api_orders():
+    # GET: Admin only
+    if request.method == 'GET':
+        if not is_authenticated():
+            return jsonify({
+                'success': False,
+                'error': 'Unauthorized: Administrator authentication required to view customer orders.'
+            }), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM orders ORDER BY created_at DESC')
+        rows = cursor.fetchall()
+        conn.close()
+        orders = []
+        for r in rows:
+            o = dict(r)
+            o['customerName'] = o['customer_name']
+            o['totalPrice'] = o['total_price']
+            o['createdAt'] = o['created_at']
+            o['updatedAt'] = o.get('updated_at')
+            try:
+                o['items'] = json.loads(o['items']) if o['items'] else []
+            except Exception:
+                o['items'] = []
+            del o['customer_name']
+            del o['total_price']
+            del o['created_at']
+            orders.append(o)
+        return jsonify(orders)
+
+    # POST: Place Order (PUBLIC - Optional phone supported)
+    body = get_request_json()
+    customer_name = (body.get('customerName') or body.get('customer_name') or '').strip()
+    mobile = (body.get('mobile') or '').strip()
+    whatsapp = (body.get('whatsapp') or mobile).strip()
+    email = (body.get('email') or '').strip()
+    address = (body.get('address') or '').strip()
+    items = body.get('items') or []
+    total_price = float(body.get('totalPrice') or body.get('total_price') or 0.0)
+
+    if not customer_name:
+        customer_name = 'Direct WhatsApp Guest'
+    if not mobile and not whatsapp:
+        mobile = 'Via WhatsApp Chat'
+        whatsapp = 'Via WhatsApp Chat'
+
+    order_id = body.get('id')
+    if not order_id or not str(order_id).startswith('ord-'):
+        order_id = f"ord-{int(time.time() * 1000) % 1000000}"
+
+    created_at = body.get('createdAt') or datetime.datetime.now(datetime.timezone.utc).isoformat()
+    items_str = json.dumps(items)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT OR REPLACE INTO orders 
+        (id, customer_name, mobile, whatsapp, email, address, items, total_price, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (order_id, customer_name, mobile, whatsapp, email, address, items_str, total_price, 'New', created_at, created_at))
+    conn.commit()
+    conn.close()
+
+    order_obj = {
+        'id': order_id,
+        'customerName': customer_name,
+        'mobile': mobile,
+        'whatsapp': whatsapp,
+        'email': email,
+        'address': address,
+        'items': items,
+        'totalPrice': total_price,
+        'status': 'New',
+        'createdAt': created_at
+    }
+    return jsonify({
+        'success': True,
+        'order': order_obj,
+        **order_obj
+    }), 201
+
+# 11. Orders: Status Update & Delete
+@app.route('/api/orders/<path:order_id>/status', methods=['PUT'])
+def api_order_status(order_id):
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    body = get_request_json()
+    new_status = (body.get('status') or 'New').strip()
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM orders WHERE id = ?', (order_id,))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({'success': False, 'error': f'Order #{order_id} not found.'}), 404
+
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    cursor.execute('UPDATE orders SET status = ?, updated_at = ? WHERE id = ?', (new_status, now_iso, order_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'id': order_id, 'status': new_status})
+
+@app.route('/api/orders/<path:order_id>', methods=['PUT', 'DELETE'])
+def api_order_item(order_id):
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized: Administrator authentication required.'}), 401
+
+    if request.method == 'PUT':
+        body = get_request_json()
+        new_status = (body.get('status') or 'New').strip()
+        conn = get_db()
+        cursor = conn.cursor()
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        cursor.execute('UPDATE orders SET status = ?, updated_at = ? WHERE id = ?', (new_status, now_iso, order_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'id': order_id, 'status': new_status})
+
+    if request.method == 'DELETE':
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, customer_name FROM orders WHERE id = ?', (order_id,))
+        order_row = cursor.fetchone()
+
+        if not order_row:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': f'Order #{order_id} does not exist or has already been deleted.'
+            }), 404
+
+        cursor.execute('DELETE FROM orders WHERE id = ?', (order_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': f'Order #{order_id} for {order_row["customer_name"]} permanently deleted.',
+            'deletedId': order_id
+        }), 200
+
+# 12. Backup & Restore (Admin Only)
+@app.route('/api/backup', methods=['GET'])
+def api_backup():
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT * FROM products')
+    prods = [dict(r) for r in c.fetchall()]
+    c.execute('SELECT * FROM categories')
+    cats = [dict(r) for r in c.fetchall()]
+    c.execute('SELECT * FROM orders')
+    ords = [dict(r) for r in c.fetchall()]
+    c.execute('SELECT * FROM settings')
+    sets = {r['key']: r['value'] for r in c.fetchall()}
+    conn.close()
+    return jsonify({
+        'exportedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        'products': prods,
+        'categories': cats,
+        'orders': ords,
+        'settings': sets
+    })
+
+@app.route('/api/restore', methods=['POST'])
+def api_restore():
+    if not is_authenticated():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    body = get_request_json()
+    prods = body.get('products') or []
+    ords = body.get('orders') or []
+    sets = body.get('settings') or {}
+    conn = get_db()
+    c = conn.cursor()
+    if sets:
+        for k, v in sets.items():
+            c.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (str(k), str(v)))
+    if prods:
+        c.execute('DELETE FROM products')
+        for p in prods:
+            imgs_str = json.dumps(p.get('images')) if isinstance(p.get('images'), list) else (p.get('images') or '[]')
+            c.execute('''
+                INSERT OR REPLACE INTO products
+                (id, name, category, price, compare_price, image, secondary_image, description, details, sizes, colors, is_available, badge, sort_order, created_at, images)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (p['id'], p['name'], p['category'], p['price'], p.get('compare_price'), p.get('image'), p.get('secondary_image'), p.get('description'), p.get('details'), p.get('sizes'), p.get('colors'), p.get('is_available', 1), p.get('badge'), p.get('sort_order', 0), p.get('created_at'), imgs_str))
+    if ords:
+        c.execute('DELETE FROM orders')
+        for o in ords:
+            c.execute('''
+                INSERT OR REPLACE INTO orders
+                (id, customer_name, mobile, whatsapp, email, address, items, total_price, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (o['id'], o['customer_name'], o['mobile'], o['whatsapp'], o.get('email'), o.get('address'), o['items'], o['total_price'], o.get('status', 'New'), o.get('created_at')))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'message': 'Database restored successfully.'})
+
+# 13. Static File Catch-All Handler
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Prevent directory traversal attacks
+    target = os.path.normpath(os.path.join(BASE_DIR, filename))
+    if not target.startswith(BASE_DIR):
+        return jsonify({'error': 'Forbidden'}), 403
+    if os.path.isfile(target):
+        return send_from_directory(BASE_DIR, filename)
+    return jsonify({'error': 'Not Found'}), 404
+
+# -------------------------------------------------------------
+# Development Execution Entry Point
+# -------------------------------------------------------------
+if __name__ == '__main__':
     url = f"http://localhost:{PORT}"
     print("=" * 70)
-    print("  * ELUMALAYAN GARMENTS -- LUXURY APPAREL & COMMERCE ENGINE *")
+    print("  * ELUMALAYAN GARMENTS -- FLASK COMMERCE & WSGI ENGINE *")
     print("=" * 70)
     print(f"  * Public Storefront:     {url}")
     print(f"  * Private Admin Panel:   {url}/admin.html")
@@ -1062,13 +1064,4 @@ def run_server():
     print("=" * 70)
     print("  Server is active. Press CTRL+C to terminate.")
     print("=" * 70)
-
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down server gracefully...")
-        httpd.server_close()
-
-if __name__ == '__main__':
-    run_server()
-
+    app.run(host='0.0.0.0', port=PORT, debug=True)
