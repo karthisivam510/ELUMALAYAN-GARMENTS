@@ -211,12 +211,12 @@ def run_tests():
     all_have_images = all('images' in p and isinstance(p['images'], list) for p in prods)
     log_test("Catalog Integrity: Multi-Image Data Preserved", code == 200 and all_have_images, f"{len(prods)} products verified")
 
-    # 11. 4-Category architecture preservation
+    # 11. 4-Category architecture preservation (Tamil Ethnic Collections)
     code, cats = http_get("/api/categories")
     cat_names = [c['name'] for c in cats]
-    expected_cats = ["Outerwear & Coats", "Tailoring & Suits", "Dresses & Eveningwear", "Knitwear & Essentials"]
+    expected_cats = ["Traditional Pattu Pavadai", "Festive & Wedding Specials", "Aari Work & Designer Pavadai", "Little Princess Daily Ethnic Wear"]
     cats_match = all(c in cat_names for c in expected_cats) and len(cats) == 4
-    log_test("Architecture: 4 Core Categories Intact", code == 200 and cats_match, f"Categories: {', '.join(cat_names)}")
+    log_test("Architecture: 4 Core Traditional Categories Intact", code == 200 and cats_match, f"Categories: {', '.join(cat_names)}")
 
     print("\n" + "=" * 70)
     print("  SIMULATING FESTIVAL CALENDAR IN ASIA/KOLKATA TIMEZONE")

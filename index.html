@@ -66,7 +66,7 @@
       <nav class="hidden lg:flex items-center gap-8 text-[12px] uppercase tracking-[0.18em] font-medium text-zinc-600">
         <a href="#hero" class="hover:text-zinc-900 transition-colors">Home</a>
         <a href="#catalog-section" onclick="App.setCategory('All')" class="hover:text-zinc-900 transition-colors">Catalog</a>
-        <a href="#catalog-section" onclick="App.setCategory('Outerwear')" class="hover:text-zinc-900 transition-colors">New Arrivals</a>
+        <a href="#catalog-section" onclick="App.setCategory('Traditional Pattu Pavadai')" class="hover:text-zinc-900 transition-colors">Pattu Pavadai</a>
         <a href="#collections" class="hover:text-zinc-900 transition-colors">Collections</a>
         <a href="#contact" class="hover:text-zinc-900 transition-colors">Contact</a>
       </nav>
@@ -159,9 +159,10 @@
         <nav class="flex flex-col gap-4 py-8 text-sm uppercase tracking-widest font-medium text-zinc-800">
           <a href="#hero" onclick="App.closeMobileMenu()" class="hover:text-zinc-500 py-1">Home</a>
           <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('All');" class="hover:text-zinc-500 py-1">Explore Catalog</a>
-          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Outerwear');" class="hover:text-zinc-500 py-1">Outerwear</a>
-          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Tailoring');" class="hover:text-zinc-500 py-1">Tailoring</a>
-          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Dresses');" class="hover:text-zinc-500 py-1">Dresses</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Traditional Pattu Pavadai');" class="hover:text-zinc-500 py-1">Traditional Pattu</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Festive & Wedding Specials');" class="hover:text-zinc-500 py-1">Wedding Specials</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Aari Work & Designer Pavadai');" class="hover:text-zinc-500 py-1">Aari Work Designer</a>
+          <a href="#catalog-section" onclick="App.closeMobileMenu(); App.setCategory('Little Princess Daily Ethnic Wear');" class="hover:text-zinc-500 py-1">Daily Ethnic Wear</a>
           <a href="#collections" onclick="App.closeMobileMenu()" class="hover:text-zinc-500 py-1">Collections</a>
           <a href="#contact" onclick="App.closeMobileMenu()" class="hover:text-zinc-500 py-1">Contact & Showroom</a>
         </nav>
@@ -278,12 +279,12 @@
       
       <!-- Section Header -->
       <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-        <span class="text-xs uppercase tracking-[0.25em] text-zinc-400 font-semibold block mb-2">The Atelier Archive</span>
+        <span class="text-xs uppercase tracking-[0.25em] text-pink-700 font-semibold block mb-2">Poorani Traditional Collections</span>
         <h2 class="font-serif-editorial text-3xl sm:text-5xl lg:text-6xl text-zinc-900 tracking-tight font-light">
-          Four Core Disciplines
+          Our Signature Collections
         </h2>
         <p class="text-sm text-zinc-500 font-light mt-3 max-w-xl mx-auto leading-relaxed">
-          Select any of our four foundational garment categories below to browse its complete archive of bespoke designs.
+          Handcrafted pure pattu pavadai and festive traditional wear direct from Salem weavers.
         </p>
       </div>
 
@@ -302,61 +303,61 @@
     <section id="collections" class="bg-zinc-900 text-white py-20 lg:py-32">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-xl mx-auto mb-16">
-          <span class="text-xs uppercase tracking-[0.25em] text-zinc-400 font-semibold block mb-2">Editorial Series</span>
+          <span class="text-xs uppercase tracking-[0.25em] text-pink-300 font-semibold block mb-2">Heritage Spotlight</span>
           <h2 class="font-serif-editorial text-3xl sm:text-5xl font-light tracking-tight">
-            The Atelier Capsule
+            The Poorani Festive Series
           </h2>
           <p class="text-zinc-400 text-sm mt-3 font-light">
-            Designed for those who appreciate understated luxury, precision tailoring, and monochromatic balance.
+            Pure mulberry silk, timeless temple motifs, and radiant festive weaves designed for your little princesses.
           </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <!-- Capsule Card 1 -->
-          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Tailoring'); App.scrollToCatalog();">
+          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Traditional Pattu Pavadai'); App.scrollToCatalog();">
             <img 
-              src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=85" 
-              alt="Monochrome Tailoring" 
+              src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85" 
+              alt="Traditional Salem Silk" 
               loading="lazy"
               decoding="async"
               class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-90 responsive-garment-img"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
-              <span class="text-[10px] uppercase tracking-widest text-zinc-300 font-semibold mb-1">Look 01</span>
-              <h3 class="font-serif-editorial text-2xl text-white">Monochrome Tailoring</h3>
-              <p class="text-xs text-zinc-400 mt-1">Structured shoulders and Italian wool fabrics.</p>
+              <span class="text-[10px] uppercase tracking-widest text-pink-300 font-semibold mb-1">Look 01</span>
+              <h3 class="font-serif-editorial text-2xl text-white">Pure Salem Pattu</h3>
+              <p class="text-xs text-zinc-400 mt-1">Authentic handloom silk with pure golden zari borders.</p>
             </div>
           </div>
 
           <!-- Capsule Card 2 -->
-          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Outerwear'); App.scrollToCatalog();">
+          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Festive & Wedding Specials'); App.scrollToCatalog();">
             <img 
-              src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=85" 
-              alt="Cashmere Silhouettes" 
+              src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85" 
+              alt="Grand Wedding Pavadai" 
               loading="lazy"
               decoding="async"
               class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-90 responsive-garment-img"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
-              <span class="text-[10px] uppercase tracking-widest text-zinc-300 font-semibold mb-1">Look 02</span>
-              <h3 class="font-serif-editorial text-2xl text-white">Cashmere Silhouettes</h3>
-              <p class="text-xs text-zinc-400 mt-1">Cocoon volumes and hand-stitched seams.</p>
+              <span class="text-[10px] uppercase tracking-widest text-pink-300 font-semibold mb-1">Look 02</span>
+              <h3 class="font-serif-editorial text-2xl text-white">Wedding & Festive Grandeur</h3>
+              <p class="text-xs text-zinc-400 mt-1">Royal brocade pleats & rich temple borders.</p>
             </div>
           </div>
 
           <!-- Capsule Card 3 -->
-          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Dresses'); App.scrollToCatalog();">
+          <div class="group relative overflow-hidden aspect-[3/4] bg-zinc-800 cursor-pointer" onclick="App.setCategory('Aari Work & Designer Pavadai'); App.scrollToCatalog();">
             <img 
-              src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=85" 
-              alt="Silk Eveningwear" 
+              src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85" 
+              alt="Bespoke Aari Work" 
               loading="lazy"
               decoding="async"
               class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-90 responsive-garment-img"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
-              <span class="text-[10px] uppercase tracking-widest text-zinc-300 font-semibold mb-1">Look 03</span>
-              <h3 class="font-serif-editorial text-2xl text-white">Pure Silk Charmeuse</h3>
-              <p class="text-xs text-zinc-400 mt-1">Bias-cut drape for effortless grace.</p>
+              <span class="text-[10px] uppercase tracking-widest text-pink-300 font-semibold mb-1">Look 03</span>
+              <h3 class="font-serif-editorial text-2xl text-white">Handcrafted Aari Work</h3>
+              <p class="text-xs text-zinc-400 mt-1">Intricate zardozi, pearls & stone embellishments.</p>
             </div>
           </div>
         </div>
@@ -1084,11 +1085,11 @@
         <div class="lg:col-span-2">
           <p class="text-xs uppercase tracking-widest font-semibold text-white mb-4">Catalog</p>
           <ul class="space-y-2 text-xs">
-            <li><a href="#catalog-section" onclick="App.setCategory('Outerwear')" class="hover:text-white transition-colors">Outerwear</a></li>
-            <li><a href="#catalog-section" onclick="App.setCategory('Tailoring')" class="hover:text-white transition-colors">Tailoring & Suits</a></li>
-            <li><a href="#catalog-section" onclick="App.setCategory('Knitwear')" class="hover:text-white transition-colors">Cashmere Knitwear</a></li>
-            <li><a href="#catalog-section" onclick="App.setCategory('Dresses')" class="hover:text-white transition-colors">Silk Dresses</a></li>
-            <li><a href="#catalog-section" onclick="App.setCategory('Essentials')" class="hover:text-white transition-colors">Essentials</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Traditional Pattu Pavadai')" class="hover:text-white transition-colors">Traditional Pattu</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Festive & Wedding Specials')" class="hover:text-white transition-colors">Wedding Specials</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Aari Work & Designer Pavadai')" class="hover:text-white transition-colors">Aari Work Designer</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('Little Princess Daily Ethnic Wear')" class="hover:text-white transition-colors">Daily Ethnic Wear</a></li>
+            <li><a href="#catalog-section" onclick="App.setCategory('All')" class="hover:text-white transition-colors">All Collections</a></li>
           </ul>
         </div>
 

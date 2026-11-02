@@ -179,13 +179,13 @@ class CartManager {
 // Main Storefront Application
 const App = {
   cart: null,
-  activeCategory: 'Outerwear & Coats',
+  activeCategory: 'Traditional Pattu Pavadai',
   viewMode: 'carousel', // 'carousel' or 'grid'
   searchQuery: '',
   sortBy: 'featured',
   onlyAvailable: false,
   selectedProduct: null,
-  selectedSize: 'M',
+  selectedSize: '2-3 Y',
   selectedColor: null,
   selectedQuantity: 1,
   modalGalleryImages: [],
@@ -246,6 +246,20 @@ const App = {
 
   applySettings() {
     const settings = window.Store ? window.Store.getSettings() : window.DEFAULT_STORE_CONFIG;
+
+    // Brand Logo Dynamic Update
+    if (settings.brandLogo) {
+      document.querySelectorAll('.brand-logo-img, img[src*="logo.png"], img[src*="logo-round.png"]').forEach(img => {
+        img.src = settings.brandLogo;
+      });
+    }
+
+    // Favicon Dynamic Update
+    if (settings.favicon) {
+      document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach(fav => {
+        fav.href = settings.favicon;
+      });
+    }
 
     // Brand name
     document.querySelectorAll('.store-name-text').forEach(el => {
@@ -315,6 +329,10 @@ const App = {
 
   // ========================================================
   // 1. RENDER THE 4 CORE MAIN CATEGORIES (CARDS & TITLES)
+  // Dynamic Cover Image:
+  // 1) Admin custom banner
+  // 2) Latest uploaded real product photo from that category
+  // 3) Traditional silk fallback placeholder
   // ========================================================
 
   renderMainCategories() {
@@ -323,36 +341,66 @@ const App = {
 
     const categories = window.Store ? window.Store.getCategories().filter(c => c.enabled !== false) : [];
     const allProducts = window.Store ? window.Store.getProducts() : [];
+    const settings = window.Store ? window.Store.getSettings() : (window.DEFAULT_STORE_CONFIG || {});
+    const customBanners = (settings.categoryBanners && typeof settings.categoryBanners === 'object') ? settings.categoryBanners : {};
+
+    // Traditional Fallback Images (zero Western clothes)
+    const FALLBACK_CATEGORY_IMAGES = {
+      "Traditional Pattu Pavadai": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+      "Festive & Wedding Specials": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+      "Aari Work & Designer Pavadai": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+      "Little Princess Daily Ethnic Wear": "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
+    };
 
     container.innerHTML = categories.map((cat, idx) => {
-      const catCount = allProducts.filter(p => p.category.toLowerCase() === cat.name.toLowerCase()).length;
+      const catProducts = allProducts.filter(p => p.category && p.category.toLowerCase() === cat.name.toLowerCase());
+      const catCount = catProducts.length;
       const isActive = cat.name.toLowerCase() === this.activeCategory.toLowerCase();
+
+      // Priority 1: Admin uploaded custom category banner
+      let cardImage = customBanners[cat.id] || customBanners[cat.name] || '';
+
+      // Priority 2: Latest uploaded real product photo from that category
+      if (!cardImage && catProducts.length > 0) {
+        const latestWithImg = catProducts.find(p => (Array.isArray(p.images) && p.images[0]) || p.image);
+        if (latestWithImg) {
+          cardImage = (Array.isArray(latestWithImg.images) && latestWithImg.images[0]) || latestWithImg.image;
+        }
+      }
+
+      // Priority 3: Category image from DB (ensure no Western coats) or silk fallback
+      const isWesternPlaceholder = cardImage && (cardImage.includes('539571696357') || cardImage.includes('591047139829') || cardImage.includes('576566588028'));
+      if (!cardImage || isWesternPlaceholder) {
+        cardImage = (cat.image && !cat.image.includes('539571696357') && !cat.image.includes('591047139829'))
+          ? cat.image 
+          : (FALLBACK_CATEGORY_IMAGES[cat.name] || 'assets/logo.png');
+      }
 
       return `
         <div 
           onclick="App.selectCategory('${cat.name}', true)"
           class="category-card group relative cursor-pointer border ${
             isActive 
-              ? 'active-cat-card border-zinc-950 ring-2 ring-zinc-950 bg-white' 
-              : 'border-zinc-200 bg-zinc-50 hover:border-zinc-400 hover:bg-white'
+              ? 'active-cat-card border-zinc-950 ring-2 ring-pink-700 bg-white' 
+              : 'border-zinc-200 bg-zinc-50 hover:border-pink-300 hover:bg-white'
           } overflow-hidden transition-all duration-300 flex flex-col"
         >
           <!-- Image Container with Hover Zoom -->
           <div class="relative w-full aspect-[4/5] bg-zinc-100 overflow-hidden">
             <img 
-              src="${cat.image}" 
+              src="${cardImage}" 
               alt="${cat.name}" 
               loading="lazy" 
               class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
 
             <!-- Discipline Number & Design Count Pill -->
             <div class="absolute top-3 left-3 right-3 flex items-center justify-between">
-              <span class="text-[10px] uppercase tracking-widest font-mono text-white/90 bg-black/40 backdrop-blur-md px-2 py-0.5 border border-white/20">
+              <span class="text-[10px] uppercase tracking-widest font-mono text-white/90 bg-black/50 backdrop-blur-md px-2 py-0.5 border border-white/20">
                 0${idx + 1}
               </span>
-              <span class="text-[10px] uppercase tracking-widest font-medium text-white/90 bg-black/40 backdrop-blur-md px-2.5 py-0.5 border border-white/20">
+              <span class="text-[10px] uppercase tracking-widest font-medium text-white/90 bg-black/50 backdrop-blur-md px-2.5 py-0.5 border border-white/20">
                 ${catCount} ${catCount === 1 ? 'Design' : 'Designs'}
               </span>
             </div>
@@ -360,8 +408,8 @@ const App = {
             <!-- Active Selection Pill -->
             ${isActive ? `
               <div class="absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 px-2.5 py-1 bg-white text-zinc-950 text-[10px] uppercase tracking-widest font-semibold shadow-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Active Category
+                <span class="w-1.5 h-1.5 rounded-full bg-pink-600 animate-pulse"></span>
+                Active Collection
               </div>
             ` : ''}
           </div>
@@ -369,20 +417,20 @@ const App = {
           <!-- Category Meta -->
           <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between bg-white">
             <div>
-              <h3 class="font-serif-editorial text-lg sm:text-xl text-zinc-900 font-semibold group-hover:text-zinc-600 transition-colors">
+              <h3 class="font-serif-editorial text-lg sm:text-xl text-zinc-900 font-semibold group-hover:text-pink-800 transition-colors">
                 ${cat.name}
               </h3>
               <p class="text-xs text-zinc-500 font-light mt-1.5 line-clamp-2 leading-relaxed">
-                ${cat.subtitle || 'Curated silhouette designs and tailoring.'}
+                ${cat.subtitle || 'Handcrafted traditional attire by Salem master weavers.'}
               </p>
             </div>
-
-            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
-              <span class="text-[11px] uppercase tracking-widest font-semibold ${isActive ? 'text-zinc-900' : 'text-zinc-400 group-hover:text-zinc-900'} transition-colors">
-                ${isActive ? 'Viewing Designs ↓' : 'Browse Category →'}
+            
+            <div class="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between">
+              <span class="text-[11px] uppercase tracking-widest font-semibold ${isActive ? 'text-pink-700' : 'text-zinc-600'} group-hover:text-pink-700">
+                ${isActive ? 'Viewing Collection' : 'Browse Collection'}
               </span>
-              <span class="text-xs ${isActive ? 'text-zinc-900 font-bold' : 'text-zinc-400 group-hover:text-zinc-900'}">
-                ${isActive ? '●' : '→'}
+              <span class="text-xs transition-transform duration-300 group-hover:translate-x-1 ${isActive ? 'text-pink-700' : 'text-zinc-400'}">
+                &rarr;
               </span>
             </div>
           </div>

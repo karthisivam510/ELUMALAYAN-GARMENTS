@@ -60,274 +60,169 @@ if (typeof window !== 'undefined') {
   window.normalizeWhatsAppNumber = normalizeWhatsAppNumber;
 }
 
-// 4 Core Main Product Categories
+// 4 Signature Tamil Ethnic Categories
 const DEFAULT_CATEGORIES = [
   {
-    id: "cat-outerwear",
-    name: "Outerwear & Coats",
-    slug: "outerwear",
-    subtitle: "Architectural tailored coats, cocoon volumes & cashmere trenches",
-    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1000&q=85",
+    id: "cat-traditional",
+    name: "Traditional Pattu Pavadai",
+    slug: "traditional-pattu-pavadai",
+    subtitle: "Handwoven pure silk pattu pavadai with rich zari borders & traditional motifs",
+    image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
     enabled: true,
     order: 1
   },
   {
-    id: "cat-tailoring",
-    name: "Tailoring & Suits",
-    slug: "tailoring",
-    subtitle: "Sharp double-breasted wool blazers & pleated fluid trousers",
-    image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85",
+    id: "cat-festive",
+    name: "Festive & Wedding Specials",
+    slug: "festive-wedding",
+    subtitle: "Royal bridal & grand festive lehengas crafted for memorable celebrations",
+    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
     enabled: true,
     order: 2
   },
   {
-    id: "cat-dresses",
-    name: "Dresses & Eveningwear",
-    slug: "dresses",
-    subtitle: "Liquid silk charmeuse column gowns & sculpted evening silhouettes",
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85",
+    id: "cat-aari",
+    name: "Aari Work & Designer Pavadai",
+    slug: "aari-work-designer",
+    subtitle: "Exquisite hand-embroidered aari, zardozi & stone embellishments",
+    image: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
     enabled: true,
     order: 3
   },
   {
-    id: "cat-knitwear",
-    name: "Knitwear & Essentials",
-    slug: "knitwear",
-    subtitle: "Plush Mongolian cashmere sweaters, organic poplin shirts & accessories",
-    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=1000&q=85",
+    id: "cat-daily",
+    name: "Little Princess Daily Ethnic Wear",
+    slug: "daily-ethnic",
+    subtitle: "Comfortable, featherlight cotton-silk festive wear for young princesses",
+    image: "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85",
     enabled: true,
     order: 4
   }
 ];
 
-// Curated designs mapped strictly into the 4 main categories
+// Curated designs mapped strictly into the 4 signature traditional categories
 const DEFAULT_PRODUCTS = [
-  // --- CATEGORY 1: OUTERWEAR & COATS ---
+  // --- CATEGORY 1: TRADITIONAL PATTU PAVADAI ---
   {
     id: "prod-102",
-    name: "Cocoon Cashmere & Wool Overcoat",
-    category: "Outerwear & Coats",
-    price: 650,
-    comparePrice: null,
-    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=85",
-    description: "An effortless oversized cocoon coat spun from Mongolian cashmere blended with heavyweight fleece wool. Designed with drop shoulders, deep welt pockets, and a clean minimalist collar.",
-    details: "70% Wool, 30% Grade-A Mongolian Cashmere; Unlined bonded interior; Relaxed fit for easy layering; Dry clean only.",
-    sizes: ["S", "M", "L"],
+    name: "Salem Pure Kanchipuram Silk Pattu Pavadai",
+    category: "Traditional Pattu Pavadai",
+    price: 1850,
+    comparePrice: 2400,
+    image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+    secondaryImage: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+    description: "Handcrafted pure Kanchipuram mulberry silk pattu pavadai with rich golden zari borders and contrast pleating.",
+    details: "100% Pure Mulberry Silk; Real Zari Weave; Salem Direct Manufacturer; Dry clean only.",
+    sizes: ["2-3 Y", "4-5 Y", "6-8 Y", "9-11 Y"],
     colors: [
-      { name: "Camel", hex: "#b48a5c" },
-      { name: "Charcoal", hex: "#373737" }
+      { name: "Traditional Red", hex: "#8B0000" },
+      { name: "Mustard Gold", hex: "#D4AF37" }
     ],
     isAvailable: true,
-    badge: "New Arrival",
+    badge: "Bestseller",
     order: 1,
     createdAt: "2026-02-01T12:00:00Z"
   },
   {
     id: "prod-107",
-    name: "Sculpted Storm-Flap Trench Coat",
-    category: "Outerwear & Coats",
-    price: 520,
+    name: "Royal Magenta Handloom Pattu Pavadai",
+    category: "Traditional Pattu Pavadai",
+    price: 2150,
     comparePrice: null,
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=1000&q=85",
-    description: "A fresh architectural take on the timeless trench. Crafted in water-resistant dense cotton gabardine with an exaggerated storm flap, raglan sleeves, and belt with leather buckle.",
-    details: "100% Cotton Gabardine; Water-repellent finish; Genuine horn buttons; Wipe clean with damp cloth or dry clean.",
-    sizes: ["S", "M", "L"],
+    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+    secondaryImage: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+    description: "Traditional magenta and green silk pavadai with temple border detailing crafted for auspicious celebrations.",
+    details: "Handloom Pure Silk; Rich Pallu / Daavani finish; Handcrafted in Salem.",
+    sizes: ["1-2 Y", "3-4 Y", "5-6 Y", "7-8 Y"],
     colors: [
-      { name: "Sand", hex: "#d8c4aa" },
-      { name: "Olive Noir", hex: "#3a3c36" }
+      { name: "Magenta & Parrot Green", hex: "#C71585" }
     ],
     isAvailable: true,
-    badge: "Limited Edition",
+    badge: "New Arrival",
     order: 2,
     createdAt: "2026-03-01T15:20:00Z"
   },
-  {
-    id: "prod-111",
-    name: "Belted Virgin Wool Duster Coat",
-    category: "Outerwear & Coats",
-    price: 590,
-    comparePrice: 680,
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1000&q=85",
-    description: "Fluid floor-grazing duster tailored from lightweight Italian virgin wool twill. Cut with deep side slits, high notch lapels, and a removable self-tie sash.",
-    details: "100% Italian Virgin Wool; Half lined in cupro; Dry clean only; Made in Italy.",
-    sizes: ["XS", "S", "M", "L"],
-    colors: [
-      { name: "Deep Espresso", hex: "#2b221d" },
-      { name: "Oatmeal", hex: "#dfd8cd" }
-    ],
-    isAvailable: true,
-    badge: "Sale",
-    order: 3,
-    createdAt: "2026-03-12T10:00:00Z"
-  },
 
-  // --- CATEGORY 2: TAILORING & SUITS ---
+  // --- CATEGORY 2: FESTIVE & WEDDING SPECIALS ---
   {
     id: "prod-101",
-    name: "Double-Breasted Italian Wool Blazer",
-    category: "Tailoring & Suits",
-    price: 380,
-    comparePrice: 450,
-    image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=85",
-    description: "Architectural double-breasted silhouette tailored from regenerative Italian virgin wool. Features peaked lapels, natural horn buttons, structured shoulders, and a clean vented back.",
-    details: "100% Virgin Wool; Full Cupro Lining; Hand-finished horn buttons; Made in Porto, Portugal; Dry clean only.",
-    sizes: ["XS", "S", "M", "L", "XL"],
+    name: "Grand Temple Border Wedding Pavadai",
+    category: "Festive & Wedding Specials",
+    price: 2800,
+    comparePrice: 3500,
+    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85",
+    secondaryImage: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+    description: "Regal wedding festive pavadai set with broad temple borders and zari butta embroidery.",
+    details: "Pure Raw Silk with Brocade; Double Zari Border; Matching Blouse Material included.",
+    sizes: ["2-4 Y", "5-7 Y", "8-10 Y", "11-13 Y"],
     colors: [
-      { name: "Onyx Black", hex: "#18181b" },
-      { name: "Taupe Melange", hex: "#a1988c" }
+      { name: "Temple Gold & Maroon", hex: "#800000" }
     ],
     isAvailable: true,
-    badge: "Bestseller",
+    badge: "Wedding Special",
     order: 1,
     createdAt: "2026-01-15T10:00:00Z"
   },
   {
     id: "prod-105",
-    name: "Pleated Wide-Leg Wool Trousers",
-    category: "Tailoring & Suits",
-    price: 260,
+    name: "Peacock Blue Festive Brocade Pattu Set",
+    category: "Festive & Wedding Specials",
+    price: 2250,
     comparePrice: null,
-    image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=1000&q=85",
-    description: "Dramatic high-rise trousers featuring deep twin front pleats and an expansive wide-leg drape. Styled with slant pockets and a clean extended tab waistband.",
-    details: "98% Tropical Wool, 2% Elastane; Cotton pocket lining; Blind hem with 2-inch let-out allowance; Dry clean.",
-    sizes: ["XS", "S", "M", "L", "XL"],
+    image: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+    secondaryImage: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85",
+    description: "Vibrant peacock blue brocade pavadai with antique zari border designed for festivals and family celebrations.",
+    details: "Brocade Silk; Comfortable Inner Cotton Lining; Salem Craftsmanship.",
+    sizes: ["1-2 Y", "3-5 Y", "6-8 Y"],
     colors: [
-      { name: "Slate Grey", hex: "#60646c" },
-      { name: "Pure Black", hex: "#141414" }
+      { name: "Peacock Blue", hex: "#005f73" }
     ],
     isAvailable: true,
     badge: null,
     order: 2,
     createdAt: "2026-02-18T09:15:00Z"
   },
-  {
-    id: "prod-109",
-    name: "Linen Poplin Relaxed Summer Blazer",
-    category: "Tailoring & Suits",
-    price: 320,
-    comparePrice: 380,
-    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=85",
-    description: "Breathable unconstructed summer blazer woven from certified Normandy flax linen. Designed with notch lapels, patch pockets, and soft unstructured shoulders.",
-    details: "100% French Normandy Linen; Unlined with bound seams; Corozo nut buttons; Delicate dry clean.",
-    sizes: ["XS", "S", "M", "L", "XL"],
-    colors: [
-      { name: "Flax Ecru", hex: "#e5ded4" },
-      { name: "Navy Ink", hex: "#1c2438" }
-    ],
-    isAvailable: false,
-    badge: "Sale",
-    order: 3,
-    createdAt: "2026-03-08T13:10:00Z"
-  },
 
-  // --- CATEGORY 3: DRESSES & EVENINGWEAR ---
+  // --- CATEGORY 3: AARI WORK & DESIGNER PAVADAI ---
   {
-    id: "prod-104",
-    name: "Silk Charmeuse Bias Evening Dress",
-    category: "Dresses & Eveningwear",
-    price: 420,
-    comparePrice: 490,
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=85",
-    description: "Cut on the bias for a liquid drape that gracefully contours the body. Finished with delicate rouleau straps, subtle cowl neckline, and a gently flared floor-grazing hem.",
-    details: "100% Mulberry Silk Charmeuse (19mm weight); Self-lined bust; Concealed side zipper; Dry clean only.",
-    sizes: ["XS", "S", "M", "L"],
+    id: "prod-103",
+    name: "Intricate Hand-Stitched Aari Work Designer Pavadai",
+    category: "Aari Work & Designer Pavadai",
+    price: 3200,
+    comparePrice: null,
+    image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=85",
+    secondaryImage: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+    description: "Bespoke designer pattu pavadai adorned with intricate Maggam & Aari stone embroidery, pearls, and cut-work.",
+    details: "Hand Embroidered Aari Work; Raw Silk Base; Soft Butter Crepe Lining; Custom Stitching Available.",
+    sizes: ["2-3 Y", "4-5 Y", "6-8 Y", "9-11 Y"],
     colors: [
-      { name: "Champagne", hex: "#f0e6d2" },
-      { name: "Midnight Black", hex: "#121212" }
+      { name: "Royal Emerald & Rani Pink", hex: "#097969" }
     ],
     isAvailable: true,
-    badge: "Sale",
+    badge: "Designer Exclusive",
     order: 1,
     createdAt: "2026-02-14T16:00:00Z"
   },
-  {
-    id: "prod-110",
-    name: "Sculpted Column Crepe Evening Gown",
-    category: "Dresses & Eveningwear",
-    price: 460,
-    comparePrice: null,
-    image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85",
-    description: "Minimalist floor-length column gown crafted in heavyweight Italian matte crepe. Features a clean bateau neckline, deep scoop back, and center back walking slit.",
-    details: "71% Acetate, 29% Viscose Crepe; Silk habotai lining; Invisible back zip; Dry clean.",
-    sizes: ["XS", "S", "M", "L"],
-    colors: [
-      { name: "Ivory", hex: "#f5f5f0" },
-      { name: "Noir", hex: "#111111" }
-    ],
-    isAvailable: true,
-    badge: "New Arrival",
-    order: 2,
-    createdAt: "2026-03-10T11:00:00Z"
-  },
 
-  // --- CATEGORY 4: KNITWEAR & ESSENTIALS ---
+  // --- CATEGORY 4: LITTLE PRINCESS DAILY ETHNIC WEAR ---
   {
-    id: "prod-103",
-    name: "Heavyweight Cotton Poplin Shirt",
-    category: "Knitwear & Essentials",
-    price: 145,
-    comparePrice: null,
-    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=1000&q=85",
-    description: "Crisp organic long-staple cotton poplin shirt with a modern relaxed cut. Mother-of-pearl buttons, classic spread collar, and gently curved hem for elevated daily dressing.",
-    details: "100% GOTS Certified Organic Cotton; Mother-of-pearl buttons; Machine wash cold delicate, hang dry.",
-    sizes: ["XS", "S", "M", "L", "XL"],
+    id: "prod-104",
+    name: "Little Princess Floral Cotton Silk Pavadai",
+    category: "Little Princess Daily Ethnic Wear",
+    price: 950,
+    comparePrice: 1200,
+    image: "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85",
+    secondaryImage: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+    description: "Soft, breathable featherlight cotton-silk ethnic wear designed with vibrant floral motifs for playful comfort.",
+    details: "Cotton-Silk Blend; Hypoallergenic Soft Inner Lining; Easy Care Hand Wash.",
+    sizes: ["0-1 Y", "1-2 Y", "2-3 Y", "4-5 Y"],
     colors: [
-      { name: "Optic White", hex: "#fcfcfc" },
-      { name: "Sky Striped", hex: "#c9d8e8" }
+      { name: "Pastel Pink & Yellow", hex: "#FFB6C1" }
     ],
     isAvailable: true,
-    badge: "Essential",
+    badge: "Daily Essential",
     order: 1,
-    createdAt: "2026-02-10T14:30:00Z"
-  },
-  {
-    id: "prod-106",
-    name: "Ribbed Merino Mock-Neck Sweater",
-    category: "Knitwear & Essentials",
-    price: 290,
-    comparePrice: null,
-    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=1000&q=85",
-    description: "Knitted from extra-fine 19.5 micron merino wool in a plush 7-gauge fisherman rib. Features a sculpted mock neck, raglan sleeves, and relaxed ribbed cuffs.",
-    details: "100% Extrafine Merino Wool; Seamless 3D knit construction; Hand wash in cold water or dry clean.",
-    sizes: ["XS", "S", "M", "L"],
-    colors: [
-      { name: "Ivory Melange", hex: "#eae6dc" },
-      { name: "Espresso", hex: "#3b2f2f" }
-    ],
-    isAvailable: true,
-    badge: "New Arrival",
-    order: 2,
     createdAt: "2026-02-22T11:00:00Z"
-  },
-  {
-    id: "prod-108",
-    name: "Minimalist Italian Calfskin Tote",
-    category: "Knitwear & Essentials",
-    price: 480,
-    comparePrice: null,
-    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85",
-    secondaryImage: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85",
-    description: "Structured silhouette handcrafted in Tuscany from full-grain vegetable-tanned calfskin. Features hand-painted edges, unlined suede interior, and an interior zippered slip pouch.",
-    details: "100% Italian Full-Grain Calfskin; Solid brushed palladium hardware; Accommodates up to 16-inch laptop; Made in Italy.",
-    sizes: ["One Size"],
-    colors: [
-      { name: "Matte Black", hex: "#1a1a1a" },
-      { name: "Cognac Tan", hex: "#8a502c" }
-    ],
-    isAvailable: true,
-    badge: "Bestseller",
-    order: 3,
-    createdAt: "2026-03-05T08:45:00Z"
   }
 ];
 
@@ -742,7 +637,7 @@ class StoreManager {
     const product = {
       id,
       name: newProduct.name || "Untitled Garment",
-      category: newProduct.category || "Tailoring & Suits",
+      category: newProduct.category || "Traditional Pattu Pavadai",
       price: parseFloat(newProduct.price) || 0,
       comparePrice: newProduct.comparePrice ? parseFloat(newProduct.comparePrice) : null,
       images,
@@ -789,7 +684,7 @@ class StoreManager {
     const product = {
       id,
       name: newProduct.name || "Untitled Garment",
-      category: newProduct.category || "Tailoring & Suits",
+      category: newProduct.category || "Traditional Pattu Pavadai",
       price: parseFloat(newProduct.price) || 0,
       comparePrice: newProduct.comparePrice ? parseFloat(newProduct.comparePrice) : null,
       images,
@@ -1156,7 +1051,11 @@ class StoreManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (stored) {
-        return { ...window.DEFAULT_STORE_CONFIG, ...JSON.parse(stored) };
+        const parsed = JSON.parse(stored);
+        if (typeof parsed.categoryBanners === 'string') {
+          try { parsed.categoryBanners = JSON.parse(parsed.categoryBanners); } catch (e) {}
+        }
+        return { ...window.DEFAULT_STORE_CONFIG, ...parsed };
       }
     } catch (e) {
       console.warn('Error reading settings from localStorage:', e);

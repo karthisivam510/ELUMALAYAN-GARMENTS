@@ -220,6 +220,7 @@ const Admin = {
     this.renderProductsTable();
     this.renderOrdersTable();
     this.populateSettingsForm();
+    this.populateBrandingSettings();
     this.renderPhotoPresets();
   },
 
@@ -302,7 +303,8 @@ const Admin = {
     if (titleEl) {
       const titles = {
         dashboard: 'Atelier Dashboard',
-        categories: 'The 4 Core Categories',
+        categories: 'The 4 Signature Categories',
+        branding: 'Brand Identity & Category Banners',
         products: 'Products & Designs Archive',
         orders: 'Customer Orders & Inquiries',
         settings: 'Store Settings'
@@ -315,6 +317,8 @@ const Admin = {
       this.renderDashboard();
     } else if (tab === 'categories') {
       this.renderCategoriesView();
+    } else if (tab === 'branding') {
+      this.populateBrandingSettings();
     } else if (tab === 'products') {
       this.renderCategorySelectorTabs();
       this.renderProductsTable();
@@ -986,6 +990,335 @@ const Admin = {
   },
 
   // ==========================================
+  // BRANDING, LOGO & CATEGORY BANNERS CONTROLLER
+  // ==========================================
+
+  pendingBrandLogo: undefined,
+  pendingFavicon: undefined,
+  pendingCategoryBanners: {},
+
+  populateBrandingSettings() {
+    const settings = window.Store ? window.Store.getSettings() : (window.DEFAULT_STORE_CONFIG || {});
+    
+    // Logo
+    const logoImg = document.getElementById('branding-logo-preview');
+    if (logoImg) {
+      logoImg.src = this.pendingBrandLogo !== undefined 
+        ? (this.pendingBrandLogo || 'assets/logo.png') 
+        : (settings.brandLogo || 'assets/logo.png');
+    }
+
+    // Favicon
+    const favImg = document.getElementById('branding-favicon-preview');
+    if (favImg) {
+      favImg.src = this.pendingFavicon !== undefined 
+        ? (this.pendingFavicon || 'assets/favicon.ico') 
+        : (settings.favicon || 'assets/favicon.ico');
+    }
+
+    // Announcement
+    const annInput = document.getElementById('branding-announcement-text');
+    if (annInput) {
+      annInput.value = settings.announcementText || 'Elumalayan Garments — Direct Delivery Across India & Custom Orders via WhatsApp';
+    }
+    const showAnnCheck = document.getElementById('branding-show-announcement');
+    if (showAnnCheck) {
+      showAnnCheck.checked = settings.showAnnouncement !== false && settings.showAnnouncement !== '0';
+    }
+
+    // Initialize pendingCategoryBanners if empty
+    if (!this.pendingCategoryBanners || Object.keys(this.pendingCategoryBanners).length === 0) {
+      let banners = settings.categoryBanners;
+      if (typeof banners === 'string') {
+        try { banners = JSON.parse(banners); } catch (e) { banners = {}; }
+      }
+      this.pendingCategoryBanners = { ...(banners || {}) };
+    }
+
+    this.renderBrandingCategoryCards();
+  },
+
+  renderBrandingCategoryCards() {
+    const container = document.getElementById('branding-category-cards-grid');
+    if (!container) return;
+
+    const categories = window.Store ? window.Store.getCategories() : [];
+    const allProducts = window.Store ? window.Store.getProducts() : [];
+
+    // Fallback traditional ethnic silk images
+    const FALLBACK_CATEGORY_IMAGES = {
+      "Traditional Pattu Pavadai": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+      "Festive & Wedding Specials": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+      "Aari Work & Designer Pavadai": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+      "Little Princess Daily Ethnic Wear": "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
+    };
+
+    container.innerHTML = categories.map((cat, idx) => {
+      const catProducts = allProducts.filter(p => p.category && p.category.toLowerCase() === cat.name.toLowerCase());
+      
+      // Determine what image is active & its source
+      let activeImage = '';
+      let sourceBadge = '';
+
+      if (this.pendingCategoryBanners && this.pendingCategoryBanners[cat.id]) {
+        activeImage = this.pendingCategoryBanners[cat.id];
+        sourceBadge = '<span class="px-2 py-0.5 bg-pink-900 text-pink-200 text-[9px] uppercase tracking-wider font-semibold rounded">Custom Banner</span>';
+      } else if (this.pendingCategoryBanners && this.pendingCategoryBanners[cat.name]) {
+        activeImage = this.pendingCategoryBanners[cat.name];
+        sourceBadge = '<span class="px-2 py-0.5 bg-pink-900 text-pink-200 text-[9px] uppercase tracking-wider font-semibold rounded">Custom Banner</span>';
+      } else {
+        // Try latest product
+        const latestWithImg = catProducts.find(p => (Array.isArray(p.images) && p.images[0]) || p.image);
+        if (latestWithImg) {
+          activeImage = (Array.isArray(latestWithImg.images) && latestWithImg.images[0]) || latestWithImg.image;
+          sourceBadge = '<span class="px-2 py-0.5 bg-emerald-900 text-emerald-200 text-[9px] uppercase tracking-wider font-semibold rounded">Latest Product Photo</span>';
+        } else {
+          activeImage = (cat.image && !cat.image.includes('539571696357') && !cat.image.includes('591047139829'))
+            ? cat.image 
+            : (FALLBACK_CATEGORY_IMAGES[cat.name] || 'assets/logo.png');
+          sourceBadge = '<span class="px-2 py-0.5 bg-zinc-800 text-zinc-300 text-[9px] uppercase tracking-wider font-semibold rounded">Silk Fallback</span>';
+        }
+      }
+
+      return `
+        <div class="bg-zinc-50 border border-zinc-200 p-5 space-y-4 rounded-sm flex flex-col justify-between">
+          <div class="flex gap-4 items-start">
+            <div class="relative w-28 h-36 bg-zinc-200 flex-shrink-0 border border-zinc-300 overflow-hidden shadow-xs">
+              <img 
+                id="branding-cat-img-${cat.id}" 
+                src="${activeImage}" 
+                alt="${cat.name}" 
+                class="w-full h-full object-cover" 
+              />
+              <span class="absolute top-1 left-1 bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5">
+                0${idx + 1}
+              </span>
+            </div>
+
+            <div class="flex-1 min-w-0 space-y-2">
+              <div class="flex items-center justify-between gap-1 flex-wrap">
+                <span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 font-mono">${cat.slug}</span>
+                ${sourceBadge}
+              </div>
+
+              <div>
+                <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-0.5">Collection Title</label>
+                <input 
+                  type="text" 
+                  id="branding-cat-title-${cat.id}" 
+                  value="${cat.name}" 
+                  class="w-full px-2.5 py-1.5 bg-white border border-zinc-200 text-xs font-semibold focus:outline-none focus:border-zinc-900"
+                />
+              </div>
+
+              <div>
+                <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-0.5">Subtitle / Weave Details</label>
+                <textarea 
+                  id="branding-cat-sub-${cat.id}" 
+                  rows="2"
+                  class="w-full px-2.5 py-1.5 bg-white border border-zinc-200 text-xs focus:outline-none focus:border-zinc-900 resize-none"
+                >${cat.subtitle || ''}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-zinc-200/80">
+            <div class="flex items-center gap-2">
+              <input 
+                type="file" 
+                id="branding-cat-file-${cat.id}" 
+                accept="image/png,image/jpeg,image/webp" 
+                class="hidden" 
+                onchange="Admin.handleCategoryBannerFileSelect('${cat.id}', event)" 
+              />
+              <button 
+                type="button" 
+                onclick="document.getElementById('branding-cat-file-${cat.id}').click()" 
+                class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1.5"
+              >
+                <svg class="w-3.5 h-3.5 stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                <span>Upload Cover</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="Admin.clearCategoryBanner('${cat.id}')" 
+                class="px-2.5 py-1.5 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-[11px] transition-colors"
+                title="Revert to automatically pulling the newest product photo"
+              >
+                Auto Photo
+              </button>
+            </div>
+
+            <span class="text-[11px] font-mono text-zinc-500">
+              ${catProducts.length} ${catProducts.length === 1 ? 'Design' : 'Designs'}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  async handleLogoFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    try {
+      this.showToast('Optimizing and reading brand logo...', 'info');
+      const base64 = await compressImageFileToCanvas(file, 600, 0.85);
+      this.pendingBrandLogo = base64;
+      const preview = document.getElementById('branding-logo-preview');
+      if (preview) preview.src = base64;
+      this.showToast('Logo loaded. Click "Save & Publish Branding" to apply.', 'success');
+    } catch (err) {
+      console.error('Logo process error:', err);
+      alert('Failed to load logo: ' + err.message);
+    }
+  },
+
+  resetBrandLogo() {
+    this.pendingBrandLogo = '';
+    const preview = document.getElementById('branding-logo-preview');
+    if (preview) preview.src = 'assets/logo.png';
+    this.showToast('Logo reset to default Poorani badge.');
+  },
+
+  async handleFaviconFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    try {
+      this.showToast('Reading favicon...', 'info');
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64 = evt.target.result;
+        this.pendingFavicon = base64;
+        const preview = document.getElementById('branding-favicon-preview');
+        if (preview) preview.src = base64;
+        this.showToast('Favicon loaded. Click "Save & Publish Branding" to apply.', 'success');
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Favicon error:', err);
+      alert('Failed to load favicon: ' + err.message);
+    }
+  },
+
+  resetFavicon() {
+    this.pendingFavicon = '';
+    const preview = document.getElementById('branding-favicon-preview');
+    if (preview) preview.src = 'assets/favicon.ico';
+    this.showToast('Favicon reset to default.');
+  },
+
+  async handleCategoryBannerFileSelect(catId, e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    try {
+      this.showToast('Optimizing collection banner...', 'info');
+      const base64 = await compressImageFileToCanvas(file, 1000, 0.80);
+      if (!this.pendingCategoryBanners) this.pendingCategoryBanners = {};
+      this.pendingCategoryBanners[catId] = base64;
+      
+      const imgEl = document.getElementById(`branding-cat-img-${catId}`);
+      if (imgEl) imgEl.src = base64;
+
+      this.renderBrandingCategoryCards();
+      this.showToast('Cover loaded. Click "Save & Publish Branding" to apply.', 'success');
+    } catch (err) {
+      console.error('Category banner error:', err);
+      alert('Failed to load category cover: ' + err.message);
+    }
+  },
+
+  clearCategoryBanner(catId) {
+    if (this.pendingCategoryBanners) {
+      delete this.pendingCategoryBanners[catId];
+    }
+    this.renderBrandingCategoryCards();
+    this.showToast('Reverted to automatic latest product photo.');
+  },
+
+  setAnnouncementPreset(text) {
+    const input = document.getElementById('branding-announcement-text');
+    if (input) {
+      input.value = text;
+      input.focus();
+    }
+    const check = document.getElementById('branding-show-announcement');
+    if (check) check.checked = true;
+  },
+
+  async saveBrandingSettings(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const saveBtn = document.getElementById('save-branding-btn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="inline-block animate-spin mr-1.5">⟳</span> Saving & Syncing...';
+    }
+
+    try {
+      const currentSettings = window.Store ? window.Store.getSettings() : {};
+      const annText = document.getElementById('branding-announcement-text') 
+        ? document.getElementById('branding-announcement-text').value.trim() 
+        : currentSettings.announcementText;
+      const showAnn = document.getElementById('branding-show-announcement') 
+        ? document.getElementById('branding-show-announcement').checked 
+        : true;
+
+      const payload = {
+        announcementText: annText,
+        showAnnouncement: showAnn ? '1' : '0'
+      };
+
+      if (this.pendingBrandLogo !== undefined) {
+        payload.brandLogo = this.pendingBrandLogo;
+      }
+      if (this.pendingFavicon !== undefined) {
+        payload.favicon = this.pendingFavicon;
+      }
+      if (this.pendingCategoryBanners) {
+        payload.categoryBanners = JSON.stringify(this.pendingCategoryBanners);
+      }
+
+      // Update Categories (Titles & Subtitles)
+      const categories = window.Store ? window.Store.getCategories() : [];
+      for (const cat of categories) {
+        const titleInput = document.getElementById(`branding-cat-title-${cat.id}`);
+        const subInput = document.getElementById(`branding-cat-sub-${cat.id}`);
+        const updatedName = titleInput ? titleInput.value.trim() : cat.name;
+        const updatedSub = subInput ? subInput.value.trim() : cat.subtitle;
+        const updatedImg = (this.pendingCategoryBanners && this.pendingCategoryBanners[cat.id]) ? this.pendingCategoryBanners[cat.id] : cat.image;
+
+        if (updatedName !== cat.name || updatedSub !== cat.subtitle || updatedImg !== cat.image) {
+          await window.Store.updateCategory(cat.id, {
+            name: updatedName,
+            subtitle: updatedSub,
+            image: updatedImg
+          });
+        }
+      }
+
+      // Save settings to LocalStorage and SQLite
+      await window.Store.saveSettings(payload);
+
+      this.showToast('Brand identity, logo & category banners saved successfully!', 'success');
+      this.populateBrandingSettings();
+      this.renderCategoriesView();
+      this.renderCategorySelectorTabs();
+    } catch (err) {
+      console.error('Branding save error:', err);
+      alert('Failed to save branding settings: ' + err.message);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save & Publish All Branding Changes';
+      }
+    }
+  },
+
+  // ==========================================
   // SECTION 5: STORE SETTINGS & CUSTOMIZATION
   // ==========================================
 
@@ -1599,7 +1932,7 @@ const Admin = {
     if (loadingOverlay) loadingOverlay.classList.add('hidden');
 
     // Populate Category Dropdown with the 4 core categories
-    this.populateCategorySelect('form-product-category', this.selectedCategory !== 'All' ? this.selectedCategory : 'Outerwear & Coats');
+    this.populateCategorySelect('form-product-category', this.selectedCategory !== 'All' ? this.selectedCategory : 'Traditional Pattu Pavadai');
 
     // Default sizes check
     document.querySelectorAll('.form-size-check').forEach(chk => {
@@ -1678,7 +2011,7 @@ const Admin = {
     this.resetUploadBox();
   },
 
-  populateCategorySelect(elementId, selected = 'Outerwear & Coats') {
+  populateCategorySelect(elementId, selected = 'Traditional Pattu Pavadai') {
     const select = document.getElementById(elementId);
     if (!select) return;
     const categories = window.Store.getCategories();

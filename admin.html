@@ -193,6 +193,21 @@
             <span class="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-800 text-zinc-300 rounded">Core</span>
           </button>
 
+          <!-- 2B. BRAND & CATEGORY BANNERS -->
+          <button 
+            onclick="Admin.setTab('branding')" 
+            data-tab="branding"
+            class="admin-nav-item w-full flex items-center justify-between px-4 py-3 text-xs uppercase tracking-wider font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              <span>Brand & Banners</span>
+            </div>
+            <span class="text-[9px] font-semibold px-1.5 py-0.5 bg-pink-900/60 text-pink-300 rounded border border-pink-700/40">NEW</span>
+          </button>
+
           <!-- 3. PRODUCTS / DESIGNS -->
           <button 
             onclick="Admin.setTab('products')" 
@@ -443,7 +458,7 @@
         </section>
 
         <!-- ==========================================
-             SECTION 2: CATEGORIES (STRICT 4 CORE DISCIPLINES)
+             SECTION 2: CATEGORIES (4 SIGNATURE COLLECTIONS)
              ========================================== -->
         <section id="tab-view-categories" class="admin-tab-view hidden space-y-6">
           
@@ -451,17 +466,17 @@
           <div class="bg-white p-6 border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-zinc-950 text-white">Architecture Rule</span>
-                <span class="text-xs text-zinc-500">Strict 4 Core Main Categories</span>
+                <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-zinc-950 text-white">Curated Collections</span>
+                <span class="text-xs text-zinc-500">4 Signature Tamil Ethnic Categories</span>
               </div>
-              <h3 class="font-serif-editorial text-2xl text-zinc-950 font-semibold">Curated Discipline Structure</h3>
+              <h3 class="font-serif-editorial text-2xl text-zinc-950 font-semibold">Poorani Signature Collections</h3>
               <p class="text-xs text-zinc-500 max-w-2xl mt-1 leading-relaxed">
-                The storefront is engineered around strictly four foundational product categories. Each category contains unlimited designs and products. You can rename, reorder, update images, or toggle their visibility below.
+                The storefront is structured around four foundational product categories: Traditional Pattu Pavadai, Festive & Wedding Specials, Aari Work & Designer Pavadai, and Little Princess Daily Ethnic Wear. Each category supports unlimited designs. You can rename, reorder, update images, or toggle their visibility below.
               </p>
             </div>
             <div class="flex-shrink-0">
               <span class="text-xs font-mono font-semibold px-3 py-1.5 bg-zinc-100 border border-zinc-200 text-zinc-800">
-                Total: 4 Disciplines
+                Total: 4 Collections
               </span>
             </div>
           </div>
@@ -601,6 +616,204 @@
                 </tbody>
               </table>
             </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             SECTION: BRANDING & CATEGORY BANNERS
+             ========================================== -->
+        <section id="tab-view-branding" class="admin-tab-view hidden space-y-8">
+          
+          <!-- Section Overview Notice -->
+          <div class="bg-white p-6 border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-pink-950 text-pink-200">Store Branding System</span>
+                <span class="text-xs text-zinc-500">Live Dynamic Customization</span>
+              </div>
+              <h3 class="font-serif-editorial text-2xl text-zinc-950 font-semibold">Brand Identity & Category Banners</h3>
+              <p class="text-xs text-zinc-500 max-w-2xl mt-1 leading-relaxed">
+                Directly manage your official brand logo, browser favicon, collection banners, and announcement bar. All changes are saved instantly into SQLite and dynamically sync across the storefront.
+              </p>
+            </div>
+            <button 
+              type="button" 
+              onclick="Admin.saveBrandingSettings(event)" 
+              class="btn-primary-luxury text-xs py-3 px-6 flex-shrink-0"
+            >
+              Save & Publish Branding
+            </button>
+          </div>
+
+          <!-- 1. BRAND LOGO & FAVICON MANAGER -->
+          <div class="bg-white p-6 sm:p-8 border border-zinc-200 shadow-sm space-y-6">
+            <div class="pb-4 border-b border-zinc-100 flex items-center justify-between">
+              <div>
+                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Brand Logo & Favicon</h4>
+                <p class="text-xs text-zinc-500 mt-0.5">Upload official logos or icons without modifying source code.</p>
+              </div>
+              <span class="text-[10px] uppercase tracking-wider font-mono px-2 py-1 bg-zinc-100 text-zinc-600">Direct Upload</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <!-- Logo Uploader -->
+              <div class="p-5 bg-zinc-50 border border-zinc-200 rounded-sm flex flex-col sm:flex-row items-center gap-6">
+                <div class="relative flex-shrink-0">
+                  <div class="w-24 h-24 rounded-full bg-zinc-900 border-2 border-pink-400/50 flex items-center justify-center overflow-hidden shadow-lg">
+                    <img 
+                      id="branding-logo-preview" 
+                      src="assets/logo.png" 
+                      alt="Brand Logo Preview" 
+                      class="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-pink-700 text-white rounded-full flex items-center justify-center text-[10px]" title="Official Round Logo">✓</span>
+                </div>
+
+                <div class="flex-1 text-center sm:text-left space-y-2">
+                  <h5 class="text-xs uppercase tracking-wider font-semibold text-zinc-900">Official Brand Logo</h5>
+                  <p class="text-[11px] text-zinc-500 leading-normal">
+                    Appears in header, hero section, mobile menus, and receipts.
+                  </p>
+                  <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                    <input type="file" id="brand-logo-file-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="hidden" onchange="Admin.handleLogoFileSelect(event)" />
+                    <button 
+                      type="button" 
+                      onclick="document.getElementById('brand-logo-file-input').click()" 
+                      class="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs uppercase tracking-wider font-semibold transition-colors"
+                    >
+                      Upload New Logo
+                    </button>
+                    <button 
+                      type="button" 
+                      onclick="Admin.resetBrandLogo()" 
+                      class="px-3 py-2 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-xs transition-colors"
+                    >
+                      Reset Default
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Favicon Uploader -->
+              <div class="p-5 bg-zinc-50 border border-zinc-200 rounded-sm flex flex-col sm:flex-row items-center gap-6">
+                <div class="relative flex-shrink-0">
+                  <div class="w-16 h-16 rounded-lg bg-white border border-zinc-300 flex items-center justify-center overflow-hidden shadow-sm p-2">
+                    <img 
+                      id="branding-favicon-preview" 
+                      src="assets/favicon.ico" 
+                      alt="Favicon Preview" 
+                      class="w-10 h-10 object-contain" 
+                    />
+                  </div>
+                </div>
+
+                <div class="flex-1 text-center sm:text-left space-y-2">
+                  <h5 class="text-xs uppercase tracking-wider font-semibold text-zinc-900">Browser Favicon</h5>
+                  <p class="text-[11px] text-zinc-500 leading-normal">
+                    Displays on browser tabs, bookmarks, and mobile home-screen shortcuts.
+                  </p>
+                  <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                    <input type="file" id="brand-favicon-file-input" accept="image/x-icon,image/png,image/svg+xml,image/jpeg" class="hidden" onchange="Admin.handleFaviconFileSelect(event)" />
+                    <button 
+                      type="button" 
+                      onclick="document.getElementById('brand-favicon-file-input').click()" 
+                      class="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs uppercase tracking-wider font-semibold transition-colors"
+                    >
+                      Upload Favicon
+                    </button>
+                    <button 
+                      type="button" 
+                      onclick="Admin.resetFavicon()" 
+                      class="px-3 py-2 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-xs transition-colors"
+                    >
+                      Reset Default
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. STORE NOTICE & TOP ANNOUNCEMENT BANNER -->
+          <div class="bg-white p-6 sm:p-8 border border-zinc-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-100">
+              <div>
+                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Store Notice & Announcement Bar</h4>
+                <p class="text-xs text-zinc-500 mt-0.5">High-visibility top marquee for wholesale offers, booking notices, or seasonal greetings.</p>
+              </div>
+              <label class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-800 cursor-pointer select-none">
+                <input type="checkbox" id="branding-show-announcement" class="rounded text-zinc-950 focus:ring-0" />
+                <span>Show On Storefront</span>
+              </label>
+            </div>
+
+            <div>
+              <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">Announcement Banner Text</label>
+              <input 
+                type="text" 
+                id="branding-announcement-text" 
+                placeholder="e.g. Wholesale Bookings Open for Festive Season — Direct Salem Manufacturer Delivery Across India" 
+                class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950"
+              />
+            </div>
+
+            <!-- Quick Preset Chips -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Quick Presets:</span>
+              <button 
+                type="button" 
+                onclick="Admin.setAnnouncementPreset('Wholesale Bookings Open for Festive Season — Direct Salem Manufacturer Delivery Across India')" 
+                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
+              >
+                Wholesale Bookings Open
+              </button>
+              <button 
+                type="button" 
+                onclick="Admin.setAnnouncementPreset('Elumalayan Garments Salem — Home of Poorani Pattu Pavadai · Wholesale & Direct Orders Welcome')" 
+                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
+              >
+                Salem Manufacturer Welcome
+              </button>
+              <button 
+                type="button" 
+                onclick="Admin.setAnnouncementPreset('Complimentary Express Delivery Across India on Orders Over ₹1,500 · Order Direct via WhatsApp')" 
+                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
+              >
+                Complimentary Express Delivery
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. CATEGORY BANNER MANAGER (THE 4 SIGNATURE COLLECTIONS) -->
+          <div class="bg-white p-6 sm:p-8 border border-zinc-200 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-zinc-100">
+              <div>
+                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Category Collection Banners & Titles</h4>
+                <p class="text-xs text-zinc-500 mt-0.5">
+                  Each collection dynamically displays your uploaded custom cover, or automatically pulls the latest product photo from that category.
+                </p>
+              </div>
+              <span class="text-xs font-mono text-zinc-500">4 Collections Managed</span>
+            </div>
+
+            <!-- 4 Category Banner Cards Grid -->
+            <div id="branding-category-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Rendered dynamically by Admin.renderBrandingCategoryCards() -->
+            </div>
+          </div>
+
+          <!-- Bottom Action Bar -->
+          <div class="flex items-center justify-end gap-3 pt-4">
+            <button 
+              type="button" 
+              onclick="Admin.saveBrandingSettings(event)" 
+              id="save-branding-btn"
+              class="btn-primary-luxury text-xs py-3.5 px-8"
+            >
+              Save & Publish All Branding Changes
+            </button>
           </div>
 
         </section>
@@ -1121,6 +1334,13 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-6A1.125 1.125 0 012.25 9.375v-2.25zM2.25 14.625c0-.621.504-1.125 1.125-1.125h6c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-6A1.125 1.125 0 012.25 16.875v-2.25zM13.5 7.125c0-.621.504-1.125 1.125-1.125h6c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-6A1.125 1.125 0 0113.5 9.375v-2.25zM13.5 14.625c0-.621.504-1.125 1.125-1.125h6c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-2.25z" />
       </svg>
       <span class="text-[9px] uppercase tracking-wider font-semibold">4 Cats</span>
+    </button>
+
+    <button onclick="Admin.setTab('branding')" data-mobile-tab="branding" class="flex flex-col items-center justify-center p-1.5 text-zinc-400 hover:text-white flex-1">
+      <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
+      </svg>
+      <span class="text-[9px] uppercase tracking-wider font-semibold">Brand</span>
     </button>
 
     <button onclick="Admin.setTab('products')" data-mobile-tab="products" class="flex flex-col items-center justify-center p-1.5 text-zinc-400 hover:text-white flex-1">

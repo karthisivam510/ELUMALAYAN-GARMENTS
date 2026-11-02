@@ -177,12 +177,20 @@ def init_db():
         for k, v in default_settings.items():
             cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (k, v))
 
-        # Seed 4 Core Categories
+        # Seed 4 Signature Tamil Ethnic Categories
         default_categories = [
-            ("cat-outerwear", "Outerwear & Coats", "outerwear", "Architectural tailored coats, cocoon volumes & cashmere trenches", "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1000&q=85", 1, 1),
-            ("cat-tailoring", "Tailoring & Suits", "tailoring", "Sharp double-breasted wool blazers & pleated fluid trousers", "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85", 1, 2),
-            ("cat-dresses", "Dresses & Eveningwear", "dresses", "Liquid silk charmeuse column gowns & sculpted evening silhouettes", "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85", 1, 3),
-            ("cat-knitwear", "Knitwear & Essentials", "knitwear", "Plush Mongolian cashmere sweaters, organic poplin shirts & accessories", "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=1000&q=85", 1, 4)
+            ("cat-traditional", "Traditional Pattu Pavadai", "traditional-pattu-pavadai",
+             "Handwoven pure silk pattu pavadai with rich zari borders & traditional motifs",
+             "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85", 1, 1),
+            ("cat-festive", "Festive & Wedding Specials", "festive-wedding",
+             "Royal bridal & grand festive lehengas crafted for memorable celebrations",
+             "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85", 1, 2),
+            ("cat-aari", "Aari Work & Designer Pavadai", "aari-work-designer",
+             "Exquisite hand-embroidered aari, zardozi & stone embellishments",
+             "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85", 1, 3),
+            ("cat-daily", "Little Princess Daily Ethnic Wear", "daily-ethnic",
+             "Comfortable, featherlight cotton-silk festive wear for young princesses",
+             "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85", 1, 4)
         ]
         now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
         for cat in default_categories:
@@ -193,42 +201,42 @@ def init_db():
 
         # Seed initial sample products
         sample_products = [
-            ("prod-102", "Cocoon Cashmere & Wool Overcoat", "Outerwear & Coats", 650.0, None,
-             "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1000&q=85",
-             "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=85",
-             "An effortless oversized cocoon coat spun from Mongolian cashmere blended with fleece wool.",
-             "70% Wool, 30% Cashmere; Unlined bonded interior; Relaxed fit; Dry clean.",
-             json.dumps(["S", "M", "L"]), json.dumps([{"name": "Camel", "hex": "#b48a5c"}]), 1, "New Arrival", 1, now_iso),
-            ("prod-107", "Sculpted Storm-Flap Trench Coat", "Outerwear & Coats", 520.0, None,
-             "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=85",
-             "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=1000&q=85",
-             "A fresh architectural take on the timeless trench. Dense cotton gabardine with leather buckle.",
-             "100% Cotton Gabardine; Water-repellent finish; Horn buttons.",
-             json.dumps(["S", "M", "L"]), json.dumps([{"name": "Sand", "hex": "#d8c4aa"}]), 1, "Limited Edition", 2, now_iso),
-            ("prod-101", "Double-Breasted Italian Wool Blazer", "Tailoring & Suits", 380.0, 450.0,
-             "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85",
-             "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=85",
-             "Architectural double-breasted silhouette tailored from regenerative Italian virgin wool.",
-             "100% Virgin Wool; Full Cupro Lining; Hand-finished horn buttons; Dry clean only.",
-             json.dumps(["XS", "S", "M", "L", "XL"]), json.dumps([{"name": "Onyx Black", "hex": "#18181b"}]), 1, "Bestseller", 1, now_iso),
-            ("prod-105", "Pleated Wide-Leg Wool Trousers", "Tailoring & Suits", 260.0, None,
-             "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1000&q=85",
-             "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=1000&q=85",
-             "Dramatic high-rise trousers featuring deep twin front pleats and wide-leg drape.",
-             "98% Tropical Wool, 2% Elastane; Cotton pocket lining; Dry clean.",
-             json.dumps(["XS", "S", "M", "L", "XL"]), json.dumps([{"name": "Slate Grey", "hex": "#60646c"}]), 1, None, 2, now_iso),
-            ("prod-103", "Silk Charmeuse Bias Evening Dress", "Dresses & Eveningwear", 420.0, None,
+            ("prod-102", "Salem Pure Kanchipuram Silk Pattu Pavadai", "Traditional Pattu Pavadai", 1850.0, 2400.0,
+             "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+             "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+             "Handcrafted pure Kanchipuram mulberry silk pattu pavadai with rich golden zari borders and contrast pleating.",
+             "100% Pure Mulberry Silk; Real Zari Weave; Salem Direct Manufacturer; Dry clean only.",
+             json.dumps(["2-3 Y", "4-5 Y", "6-8 Y", "9-11 Y"]), json.dumps([{"name": "Traditional Red", "hex": "#8B0000"}, {"name": "Mustard Gold", "hex": "#D4AF37"}]), 1, "Bestseller", 1, now_iso),
+            ("prod-107", "Royal Magenta Handloom Pattu Pavadai", "Traditional Pattu Pavadai", 2150.0, None,
+             "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+             "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+             "Traditional magenta and green silk pavadai with temple border detailing crafted for auspicious celebrations.",
+             "Handloom Pure Silk; Rich Pallu / Daavani finish; Handcrafted in Salem.",
+             json.dumps(["1-2 Y", "3-4 Y", "5-6 Y", "7-8 Y"]), json.dumps([{"name": "Magenta & Parrot Green", "hex": "#C71585"}]), 1, "New Arrival", 2, now_iso),
+            ("prod-101", "Grand Temple Border Wedding Pavadai", "Festive & Wedding Specials", 2800.0, 3500.0,
              "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85",
+             "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+             "Regal wedding festive pavadai set with broad temple borders and zari butta embroidery.",
+             "Pure Raw Silk with Brocade; Double Zari Border; Matching Blouse Material included.",
+             json.dumps(["2-4 Y", "5-7 Y", "8-10 Y", "11-13 Y"]), json.dumps([{"name": "Temple Gold & Maroon", "hex": "#800000"}]), 1, "Wedding Special", 1, now_iso),
+            ("prod-105", "Peacock Blue Festive Brocade Pattu Set", "Festive & Wedding Specials", 2250.0, None,
+             "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+             "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85",
+             "Vibrant peacock blue brocade pavadai with antique zari border designed for festivals and family celebrations.",
+             "Brocade Silk; Comfortable Inner Cotton Lining; Salem Craftsmanship.",
+             json.dumps(["1-2 Y", "3-5 Y", "6-8 Y"]), json.dumps([{"name": "Peacock Blue", "hex": "#005f73"}]), 1, None, 2, now_iso),
+            ("prod-103", "Intricate Hand-Stitched Aari Work Designer Pavadai", "Aari Work & Designer Pavadai", 3200.0, None,
              "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=85",
-             "Floor-sweeping column gown bias-cut from 22-momme pure mulberry silk charmeuse.",
-             "100% Mulberry Silk Charmeuse; Delicate hand wash or dry clean.",
-             json.dumps(["XS", "S", "M", "L"]), json.dumps([{"name": "Champagne", "hex": "#fad6a5"}]), 1, "Essential", 1, now_iso),
-            ("prod-104", "Fine-Gauge Mongolian Cashmere Knit", "Knitwear & Essentials", 290.0, None,
-             "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=1000&q=85",
-             "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=1000&q=85",
-             "Featherlight mock-neck sweater knitted from two-ply Grade-A Mongolian cashmere yarns.",
-             "100% Mongolian Cashmere; Ribbed collar, cuffs, and hem; Hand wash cold.",
-             json.dumps(["S", "M", "L", "XL"]), json.dumps([{"name": "Ivory", "hex": "#fffff0"}]), 1, None, 1, now_iso)
+             "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+             "Bespoke designer pattu pavadai adorned with intricate Maggam & Aari stone embroidery, pearls, and cut-work.",
+             "Hand Embroidered Aari Work; Raw Silk Base; Soft Butter Crepe Lining; Custom Stitching Available.",
+             json.dumps(["2-3 Y", "4-5 Y", "6-8 Y", "9-11 Y"]), json.dumps([{"name": "Royal Emerald & Rani Pink", "hex": "#097969"}]), 1, "Designer Exclusive", 1, now_iso),
+            ("prod-104", "Little Princess Floral Cotton Silk Pavadai", "Little Princess Daily Ethnic Wear", 950.0, 1200.0,
+             "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85",
+             "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+             "Soft, breathable featherlight cotton-silk ethnic wear designed with vibrant floral motifs for playful comfort.",
+             "Cotton-Silk Blend; Hypoallergenic Soft Inner Lining; Easy Care Hand Wash.",
+             json.dumps(["0-1 Y", "1-2 Y", "2-3 Y", "4-5 Y"]), json.dumps([{"name": "Pastel Pink & Yellow", "hex": "#FFB6C1"}]), 1, "Daily Essential", 1, now_iso)
         ]
         for p in sample_products:
             cursor.execute('''
@@ -265,6 +273,102 @@ def init_db():
                 (id, customer_name, mobile, whatsapp, email, address, items, total_price, status, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', o)
+
+    # -------------------------------------------------------------
+    # Traditional Tamil Ethnic Categories Migration & Sync
+    # Migrates any legacy Western categories ("Outerwear & Coats", etc.)
+    # to the 4 Signature Collections of Elumalayan Garments:
+    # 1. Traditional Pattu Pavadai
+    # 2. Festive & Wedding Specials
+    # 3. Aari Work & Designer Pavadai
+    # 4. Little Princess Daily Ethnic Wear
+    # -------------------------------------------------------------
+    cursor.execute("SELECT id, name FROM categories")
+    existing_cats = {r['name']: r['id'] for r in cursor.fetchall()}
+    
+    legacy_keys = ["Outerwear & Coats", "Tailoring & Suits", "Dresses & Eveningwear", "Knitwear & Essentials"]
+    has_legacy = any(k in existing_cats for k in legacy_keys)
+    
+    traditional_categories = [
+        ("cat-traditional", "Traditional Pattu Pavadai", "traditional-pattu-pavadai",
+         "Handwoven pure silk pattu pavadai with rich zari borders & traditional motifs",
+         "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85", 1, 1),
+        ("cat-festive", "Festive & Wedding Specials", "festive-wedding",
+         "Royal bridal & grand festive lehengas crafted for memorable celebrations",
+         "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85", 1, 2),
+        ("cat-aari", "Aari Work & Designer Pavadai", "aari-work-designer",
+         "Exquisite hand-embroidered aari, zardozi & stone embellishments",
+         "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85", 1, 3),
+        ("cat-daily", "Little Princess Daily Ethnic Wear", "daily-ethnic",
+         "Comfortable, featherlight cotton-silk festive wear for young princesses",
+         "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85", 1, 4)
+    ]
+
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    if has_legacy or len(existing_cats) == 0:
+        for lk in legacy_keys:
+            cursor.execute("DELETE FROM categories WHERE name = ?", (lk,))
+        
+        for cat in traditional_categories:
+            cursor.execute('''
+                INSERT OR REPLACE INTO categories (id, name, slug, subtitle, image, enabled, sort_order, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (*cat, now_iso))
+        
+        cursor.execute("UPDATE products SET category = 'Traditional Pattu Pavadai' WHERE category = 'Outerwear & Coats'")
+        cursor.execute("UPDATE products SET category = 'Festive & Wedding Specials' WHERE category = 'Tailoring & Suits'")
+        cursor.execute("UPDATE products SET category = 'Aari Work & Designer Pavadai' WHERE category = 'Dresses & Eveningwear'")
+        cursor.execute("UPDATE products SET category = 'Little Princess Daily Ethnic Wear' WHERE category = 'Knitwear & Essentials'")
+        
+        cursor.execute("""
+            UPDATE products SET 
+                name = 'Salem Pure Kanchipuram Silk Pattu Pavadai',
+                description = 'Handcrafted pure Kanchipuram mulberry silk pattu pavadai with rich golden zari borders and contrast pleating.',
+                details = '100% Pure Mulberry Silk; Real Zari Weave; Salem Direct Manufacturer; Dry clean only.',
+                image = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85'
+            WHERE id = 'prod-102'
+        """)
+        cursor.execute("""
+            UPDATE products SET 
+                name = 'Royal Magenta Handloom Pattu Pavadai',
+                description = 'Traditional magenta and green silk pavadai with temple border detailing crafted for auspicious celebrations.',
+                details = 'Handloom Pure Silk; Rich Pallu / Daavani finish; Handcrafted in Salem.',
+                image = 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85'
+            WHERE id = 'prod-107'
+        """)
+        cursor.execute("""
+            UPDATE products SET 
+                name = 'Grand Temple Border Wedding Pavadai',
+                description = 'Regal wedding festive pavadai set with broad temple borders and zari butta embroidery.',
+                details = 'Pure Raw Silk with Brocade; Double Zari Border; Matching Blouse Material included.',
+                image = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=85'
+            WHERE id = 'prod-101'
+        """)
+        cursor.execute("""
+            UPDATE products SET 
+                name = 'Peacock Blue Festive Brocade Pattu Set',
+                description = 'Vibrant peacock blue brocade pavadai with antique zari border designed for festivals and family celebrations.',
+                details = 'Brocade Silk; Comfortable Inner Cotton Lining; Salem Craftsmanship.',
+                image = 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85'
+            WHERE id = 'prod-105'
+        """)
+        cursor.execute("""
+            UPDATE products SET 
+                name = 'Intricate Hand-Stitched Aari Work Designer Pavadai',
+                description = 'Bespoke designer pattu pavadai adorned with intricate Maggam & Aari stone embroidery, pearls, and cut-work.',
+                details = 'Hand Embroidered Aari Work; Raw Silk Base; Soft Butter Crepe Lining; Custom Stitching Available.',
+                image = 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=85'
+            WHERE id = 'prod-103'
+        """)
+        cursor.execute("""
+            UPDATE products SET 
+                name = 'Little Princess Floral Cotton Silk Pavadai',
+                description = 'Soft, breathable featherlight cotton-silk ethnic wear designed with vibrant floral motifs for playful comfort.',
+                details = 'Cotton-Silk Blend; Hypoallergenic Soft Inner Lining; Easy Care Hand Wash.',
+                image = 'https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85'
+            WHERE id = 'prod-104'
+        """)
+        conn.commit()
 
     # Ensure festival theme configuration exists in settings table
     festival_defaults = {
@@ -625,13 +729,14 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
                 return self.send_json({'success': False, 'error': 'Unauthorized: Admin authentication required.'}, status=401)
             
             ALLOWED_SETTINGS_KEYS = {
-                'storeName', 'tagline', 'established', 'currencySymbol', 'currencyCode',
-                'taxIncluded', 'freeShippingThreshold', 'whatsappNumber', 'whatsappNumber2',
-                'whatsappNumber3', 'whatsappDefaultMessage', 'instagramHandle', 'instagramUrl',
-                'supportEmail', 'supportPhone', 'address', 'openingHours',
+                'storeName', 'brandName', 'subtitle', 'tagline', 'subBadge', 'established',
+                'currencySymbol', 'currencyCode', 'taxIncluded', 'freeShippingThreshold',
+                'whatsappNumber', 'whatsappNumber2', 'whatsappNumber3', 'whatsappDefaultMessage',
+                'instagramHandle', 'instagramUrl', 'supportEmail', 'supportPhone', 'address', 'openingHours',
                 'announcementText', 'showAnnouncement',
                 'festivalAutoMode', 'festivalActiveOverride', 'festivalOverrideUntil',
-                'festivalCustomBanner', 'festivalCustomDates'
+                'festivalCustomBanner', 'festivalCustomDates',
+                'brandLogo', 'favicon', 'categoryBanners', 'site_settings'
             }
 
             conn = get_db()
@@ -639,9 +744,9 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             for k, v in body.items():
                 k_str = str(k).strip()
                 if k_str in ALLOWED_SETTINGS_KEYS:
-                    v_str = str(v)
-                    if len(v_str) > 10000:
-                        v_str = v_str[:10000]
+                    v_str = json.dumps(v) if isinstance(v, (dict, list)) else str(v)
+                    if len(v_str) > 2500000:
+                        v_str = v_str[:2500000]
                     cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (k_str, v_str))
             conn.commit()
             cursor.execute('SELECT key, value FROM settings')
@@ -658,7 +763,7 @@ class AtelierRequestHandler(SimpleHTTPRequestHandler):
             if not self.is_authenticated():
                 return self.send_json({'success': False, 'error': 'Unauthorized'}, status=401)
             name = (body.get('name') or 'Untitled Garment').strip()
-            category = body.get('category') or 'Tailoring & Suits'
+            category = body.get('category') or 'Traditional Pattu Pavadai'
             price = float(body.get('price') or 0.0)
             compare_price = float(body['comparePrice']) if body.get('comparePrice') else None
 
