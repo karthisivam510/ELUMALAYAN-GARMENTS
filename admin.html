@@ -193,7 +193,7 @@
             <span class="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-800 text-zinc-300 rounded">Core</span>
           </button>
 
-          <!-- 2B. BRAND & CATEGORY BANNERS -->
+          <!-- 2B. STORE SETTINGS & BRANDING -->
           <button 
             onclick="Admin.setTab('branding')" 
             data-tab="branding"
@@ -203,9 +203,9 @@
               <svg class="w-4 h-4 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
-              <span>Brand & Banners</span>
+              <span>Store Settings & Branding</span>
             </div>
-            <span class="text-[9px] font-semibold px-1.5 py-0.5 bg-pink-900/60 text-pink-300 rounded border border-pink-700/40">NEW</span>
+            <span class="text-[9px] font-semibold px-1.5 py-0.5 bg-pink-900/60 text-pink-300 rounded border border-pink-700/40">Active</span>
           </button>
 
           <!-- 3. PRODUCTS / DESIGNS -->
@@ -621,73 +621,80 @@
         </section>
 
         <!-- ==========================================
-             SECTION: BRANDING & CATEGORY BANNERS
+             SECTION: STORE SETTINGS & BRANDING
              ========================================== -->
         <section id="tab-view-branding" class="admin-tab-view hidden space-y-8">
           
-          <!-- Section Overview Notice -->
+          <!-- Section Overview Notice & Action Bar -->
           <div class="bg-white p-6 border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-pink-950 text-pink-200">Store Branding System</span>
-                <span class="text-xs text-zinc-500">Live Dynamic Customization</span>
+                <span class="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 bg-pink-950 text-pink-200">Store Settings & Branding</span>
+                <span class="text-xs text-zinc-500">Dynamic SQLite Sync</span>
               </div>
-              <h3 class="font-serif-editorial text-2xl text-zinc-950 font-semibold">Brand Identity & Category Banners</h3>
+              <h3 class="font-serif-editorial text-2xl text-zinc-950 font-semibold">Store Settings & Branding</h3>
               <p class="text-xs text-zinc-500 max-w-2xl mt-1 leading-relaxed">
-                Directly manage your official brand logo, browser favicon, collection banners, and announcement bar. All changes are saved instantly into SQLite and dynamically sync across the storefront.
+                Directly customize your store company logo, brand title, header tagline, announcement bar, and the 4 featured signature collections via the <code class="bg-zinc-100 px-1 py-0.5 text-zinc-700">/api/settings</code> API.
               </p>
             </div>
             <button 
               type="button" 
               onclick="Admin.saveBrandingSettings(event)" 
+              id="save-branding-btn" 
               class="btn-primary-luxury text-xs py-3 px-6 flex-shrink-0"
             >
-              Save & Publish Branding
+              Save Branding Settings
             </button>
           </div>
 
-          <!-- 1. BRAND LOGO & FAVICON MANAGER -->
+          <!-- 1. COMPANY LOGO & FAVICON MANAGER -->
           <div class="bg-white p-6 sm:p-8 border border-zinc-200 shadow-sm space-y-6">
             <div class="pb-4 border-b border-zinc-100 flex items-center justify-between">
               <div>
-                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Brand Logo & Favicon</h4>
-                <p class="text-xs text-zinc-500 mt-0.5">Upload official logos or icons without modifying source code.</p>
+                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Company Logo & Browser Favicon</h4>
+                <p class="text-xs text-zinc-500 mt-0.5">Upload official store logos. Stored as Base64 in SQLite settings.</p>
               </div>
-              <span class="text-[10px] uppercase tracking-wider font-mono px-2 py-1 bg-zinc-100 text-zinc-600">Direct Upload</span>
+              <span class="text-[10px] uppercase tracking-wider font-mono px-2 py-1 bg-zinc-100 text-zinc-600">Base64 Upload</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <!-- Logo Uploader -->
+              <!-- Company Logo Uploader -->
               <div class="p-5 bg-zinc-50 border border-zinc-200 rounded-sm flex flex-col sm:flex-row items-center gap-6">
                 <div class="relative flex-shrink-0">
                   <div class="w-24 h-24 rounded-full bg-zinc-900 border-2 border-pink-400/50 flex items-center justify-center overflow-hidden shadow-lg">
                     <img 
-                      id="branding-logo-preview" 
+                      id="site-logo-preview" 
                       src="assets/logo.png" 
-                      alt="Brand Logo Preview" 
+                      alt="Company Logo Preview" 
                       class="w-full h-full object-cover" 
                     />
                   </div>
-                  <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-pink-700 text-white rounded-full flex items-center justify-center text-[10px]" title="Official Round Logo">✓</span>
+                  <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-pink-700 text-white rounded-full flex items-center justify-center text-[10px]" title="Company Logo">✓</span>
                 </div>
 
                 <div class="flex-1 text-center sm:text-left space-y-2">
-                  <h5 class="text-xs uppercase tracking-wider font-semibold text-zinc-900">Official Brand Logo</h5>
+                  <h5 class="text-xs uppercase tracking-wider font-semibold text-zinc-900">Store Company Logo (site_logo)</h5>
                   <p class="text-[11px] text-zinc-500 leading-normal">
-                    Appears in header, hero section, mobile menus, and receipts.
+                    Appears across header navbar, hero banner, order modals, and footer.
                   </p>
                   <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                    <input type="file" id="brand-logo-file-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="hidden" onchange="Admin.handleLogoFileSelect(event)" />
+                    <input 
+                      type="file" 
+                      id="site-logo-input" 
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml" 
+                      class="hidden" 
+                      onchange="Admin.handleSiteLogoFileSelect(event)" 
+                    />
                     <button 
                       type="button" 
-                      onclick="document.getElementById('brand-logo-file-input').click()" 
+                      onclick="document.getElementById('site-logo-input').click()" 
                       class="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs uppercase tracking-wider font-semibold transition-colors"
                     >
-                      Upload New Logo
+                      Upload Store Logo
                     </button>
                     <button 
                       type="button" 
-                      onclick="Admin.resetBrandLogo()" 
+                      onclick="Admin.resetSiteLogo()" 
                       class="px-3 py-2 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-xs transition-colors"
                     >
                       Reset Default
@@ -736,71 +743,336 @@
             </div>
           </div>
 
-          <!-- 2. STORE NOTICE & TOP ANNOUNCEMENT BANNER -->
-          <div class="bg-white p-6 sm:p-8 border border-zinc-200 shadow-sm space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-zinc-100">
-              <div>
-                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Store Notice & Announcement Bar</h4>
-                <p class="text-xs text-zinc-500 mt-0.5">High-visibility top marquee for wholesale offers, booking notices, or seasonal greetings.</p>
-              </div>
-              <label class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-800 cursor-pointer select-none">
-                <input type="checkbox" id="branding-show-announcement" class="rounded text-zinc-950 focus:ring-0" />
-                <span>Show On Storefront</span>
-              </label>
+          <!-- 2. STORE NAME, TAGLINE & TOP ANNOUNCEMENT BANNER -->
+          <div class="bg-white p-6 sm:p-8 border border-zinc-200 shadow-sm space-y-6">
+            <div class="pb-3 border-b border-zinc-100">
+              <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Store Identity & Header Announcement</h4>
+              <p class="text-xs text-zinc-500 mt-0.5">Editable store title, slogan, and top ticker bar for announcements and wholesale notices.</p>
             </div>
 
-            <div>
-              <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">Announcement Banner Text</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">Store Title / Brand Name</label>
+                <input 
+                  type="text" 
+                  id="branding-store-name" 
+                  placeholder="Elumalayan Garments" 
+                  class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs font-semibold focus:bg-white focus:outline-none focus:border-zinc-950"
+                />
+                <p class="text-[10px] text-zinc-400 mt-1">Appears in header, hero section, and browser tab titles.</p>
+              </div>
+
+              <div>
+                <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-700 mb-1.5">Tagline / Subtitle</label>
+                <input 
+                  type="text" 
+                  id="branding-tagline" 
+                  placeholder="Traditional Elegance, Made for Little Princesses!" 
+                  class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950"
+                />
+                <p class="text-[10px] text-zinc-400 mt-1">Shown below the main brand title across the storefront.</p>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-zinc-100 space-y-4">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs uppercase tracking-wider font-semibold text-zinc-700">Header Announcement Bar Text</label>
+                <label class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-800 cursor-pointer select-none">
+                  <input type="checkbox" id="branding-show-announcement" class="rounded text-zinc-950 focus:ring-0" />
+                  <span>Show On Storefront</span>
+                </label>
+              </div>
+
               <input 
                 type="text" 
                 id="branding-announcement-text" 
-                placeholder="e.g. Wholesale Bookings Open for Festive Season — Direct Salem Manufacturer Delivery Across India" 
+                placeholder="Elumalayan Garments — Direct Delivery Across India & Custom Orders via WhatsApp" 
                 class="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 text-xs focus:bg-white focus:outline-none focus:border-zinc-950"
               />
-            </div>
 
-            <!-- Quick Preset Chips -->
-            <div class="flex flex-wrap items-center gap-2 pt-1">
-              <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Quick Presets:</span>
-              <button 
-                type="button" 
-                onclick="Admin.setAnnouncementPreset('Wholesale Bookings Open for Festive Season — Direct Salem Manufacturer Delivery Across India')" 
-                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
-              >
-                Wholesale Bookings Open
-              </button>
-              <button 
-                type="button" 
-                onclick="Admin.setAnnouncementPreset('Elumalayan Garments Salem — Home of Poorani Pattu Pavadai · Wholesale & Direct Orders Welcome')" 
-                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
-              >
-                Salem Manufacturer Welcome
-              </button>
-              <button 
-                type="button" 
-                onclick="Admin.setAnnouncementPreset('Complimentary Express Delivery Across India on Orders Over ₹1,500 · Order Direct via WhatsApp')" 
-                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
-              >
-                Complimentary Express Delivery
-              </button>
+              <!-- Quick Presets -->
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Quick Presets:</span>
+                <button 
+                  type="button" 
+                  onclick="Admin.setAnnouncementPreset('Wholesale Bookings Open for Festive Season — Direct Salem Manufacturer Delivery Across India')" 
+                  class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
+                >
+                  Wholesale Bookings Open
+                </button>
+                <button 
+                  type="button" 
+                  onclick="Admin.setAnnouncementPreset('Elumalayan Garments Salem — Home of Poorani Pattu Pavadai · Wholesale & Direct Orders Welcome')" 
+                  class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
+                >
+                  Salem Manufacturer Welcome
+                </button>
+                <button 
+                  type="button" 
+                  onclick="Admin.setAnnouncementPreset('Complimentary Express Delivery Across India on Orders Over ₹1,500 · Order Direct via WhatsApp')" 
+                  class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] rounded transition-colors"
+                >
+                  Complimentary Express Delivery
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- 3. CATEGORY BANNER MANAGER (THE 4 SIGNATURE COLLECTIONS) -->
+          <!-- 3. FEATURED CATEGORIES MANAGER (4 EDITABLE SLOTS) -->
           <div class="bg-white p-6 sm:p-8 border border-zinc-200 shadow-sm space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-zinc-100">
               <div>
-                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Category Collection Banners & Titles</h4>
+                <h4 class="font-serif-editorial text-xl font-semibold text-zinc-950">Featured Categories Manager</h4>
                 <p class="text-xs text-zinc-500 mt-0.5">
-                  Each collection dynamically displays your uploaded custom cover, or automatically pulls the latest product photo from that category.
+                  Configure the 4 featured signature collection slots on the storefront with custom titles and cover photos.
                 </p>
               </div>
-              <span class="text-xs font-mono text-zinc-500">4 Collections Managed</span>
+              <span class="text-xs font-mono px-2.5 py-1 bg-zinc-100 text-zinc-700 font-semibold">4 Slots Configured</span>
             </div>
 
-            <!-- 4 Category Banner Cards Grid -->
-            <div id="branding-category-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Rendered dynamically by Admin.renderBrandingCategoryCards() -->
+            <!-- The 4 Editable Slots Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <!-- Slot 1: Traditional Pattu Pavadai -->
+              <div class="bg-zinc-50 border border-zinc-200 p-5 space-y-4 rounded-sm flex flex-col justify-between">
+                <div class="flex gap-4 items-start">
+                  <div class="relative w-28 h-36 bg-zinc-200 flex-shrink-0 border border-zinc-300 overflow-hidden shadow-xs">
+                    <img 
+                      id="featured-cat-preview-1" 
+                      src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85" 
+                      alt="Slot 1 Cover" 
+                      class="w-full h-full object-cover" 
+                    />
+                    <span class="absolute top-1 left-1 bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5 font-bold">
+                      01
+                    </span>
+                  </div>
+
+                  <div class="flex-1 min-w-0 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] uppercase tracking-wider font-semibold text-pink-700 font-mono">Slot 01</span>
+                      <span class="text-[10px] bg-pink-100 text-pink-800 px-2 py-0.5 font-semibold rounded">Category 1</span>
+                    </div>
+
+                    <div>
+                      <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-1">Custom Title</label>
+                      <input 
+                        type="text" 
+                        id="featured-cat-title-1" 
+                        value="Traditional Pattu Pavadai" 
+                        placeholder="Traditional Pattu Pavadai"
+                        class="w-full px-3 py-2 bg-white border border-zinc-300 text-xs font-semibold focus:outline-none focus:border-zinc-950"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-zinc-200/80">
+                  <input 
+                    type="file" 
+                    id="featured-cat-file-1" 
+                    accept="image/*" 
+                    class="hidden" 
+                    onchange="Admin.handleSlotImageSelect(1, event)" 
+                  />
+                  <button 
+                    type="button" 
+                    onclick="document.getElementById('featured-cat-file-1').click()" 
+                    class="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Upload Cover</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onclick="Admin.resetSlotImage(1)" 
+                    class="px-2.5 py-1.5 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-[11px] transition-colors"
+                  >
+                    Reset Default
+                  </button>
+                </div>
+              </div>
+
+              <!-- Slot 2: Festive & Wedding Specials -->
+              <div class="bg-zinc-50 border border-zinc-200 p-5 space-y-4 rounded-sm flex flex-col justify-between">
+                <div class="flex gap-4 items-start">
+                  <div class="relative w-28 h-36 bg-zinc-200 flex-shrink-0 border border-zinc-300 overflow-hidden shadow-xs">
+                    <img 
+                      id="featured-cat-preview-2" 
+                      src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85" 
+                      alt="Slot 2 Cover" 
+                      class="w-full h-full object-cover" 
+                    />
+                    <span class="absolute top-1 left-1 bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5 font-bold">
+                      02
+                    </span>
+                  </div>
+
+                  <div class="flex-1 min-w-0 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] uppercase tracking-wider font-semibold text-pink-700 font-mono">Slot 02</span>
+                      <span class="text-[10px] bg-pink-100 text-pink-800 px-2 py-0.5 font-semibold rounded">Category 2</span>
+                    </div>
+
+                    <div>
+                      <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-1">Custom Title</label>
+                      <input 
+                        type="text" 
+                        id="featured-cat-title-2" 
+                        value="Festive & Wedding Specials" 
+                        placeholder="Festive & Wedding Specials"
+                        class="w-full px-3 py-2 bg-white border border-zinc-300 text-xs font-semibold focus:outline-none focus:border-zinc-950"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-zinc-200/80">
+                  <input 
+                    type="file" 
+                    id="featured-cat-file-2" 
+                    accept="image/*" 
+                    class="hidden" 
+                    onchange="Admin.handleSlotImageSelect(2, event)" 
+                  />
+                  <button 
+                    type="button" 
+                    onclick="document.getElementById('featured-cat-file-2').click()" 
+                    class="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Upload Cover</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onclick="Admin.resetSlotImage(2)" 
+                    class="px-2.5 py-1.5 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-[11px] transition-colors"
+                  >
+                    Reset Default
+                  </button>
+                </div>
+              </div>
+
+              <!-- Slot 3: Aari Work & Designer Pavadai -->
+              <div class="bg-zinc-50 border border-zinc-200 p-5 space-y-4 rounded-sm flex flex-col justify-between">
+                <div class="flex gap-4 items-start">
+                  <div class="relative w-28 h-36 bg-zinc-200 flex-shrink-0 border border-zinc-300 overflow-hidden shadow-xs">
+                    <img 
+                      id="featured-cat-preview-3" 
+                      src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85" 
+                      alt="Slot 3 Cover" 
+                      class="w-full h-full object-cover" 
+                    />
+                    <span class="absolute top-1 left-1 bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5 font-bold">
+                      03
+                    </span>
+                  </div>
+
+                  <div class="flex-1 min-w-0 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] uppercase tracking-wider font-semibold text-pink-700 font-mono">Slot 03</span>
+                      <span class="text-[10px] bg-pink-100 text-pink-800 px-2 py-0.5 font-semibold rounded">Category 3</span>
+                    </div>
+
+                    <div>
+                      <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-1">Custom Title</label>
+                      <input 
+                        type="text" 
+                        id="featured-cat-title-3" 
+                        value="Aari Work & Designer Pavadai" 
+                        placeholder="Aari Work & Designer Pavadai"
+                        class="w-full px-3 py-2 bg-white border border-zinc-300 text-xs font-semibold focus:outline-none focus:border-zinc-950"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-zinc-200/80">
+                  <input 
+                    type="file" 
+                    id="featured-cat-file-3" 
+                    accept="image/*" 
+                    class="hidden" 
+                    onchange="Admin.handleSlotImageSelect(3, event)" 
+                  />
+                  <button 
+                    type="button" 
+                    onclick="document.getElementById('featured-cat-file-3').click()" 
+                    class="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Upload Cover</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onclick="Admin.resetSlotImage(3)" 
+                    class="px-2.5 py-1.5 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-[11px] transition-colors"
+                  >
+                    Reset Default
+                  </button>
+                </div>
+              </div>
+
+              <!-- Slot 4: Little Princess Daily Wear -->
+              <div class="bg-zinc-50 border border-zinc-200 p-5 space-y-4 rounded-sm flex flex-col justify-between">
+                <div class="flex gap-4 items-start">
+                  <div class="relative w-28 h-36 bg-zinc-200 flex-shrink-0 border border-zinc-300 overflow-hidden shadow-xs">
+                    <img 
+                      id="featured-cat-preview-4" 
+                      src="https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85" 
+                      alt="Slot 4 Cover" 
+                      class="w-full h-full object-cover" 
+                    />
+                    <span class="absolute top-1 left-1 bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5 font-bold">
+                      04
+                    </span>
+                  </div>
+
+                  <div class="flex-1 min-w-0 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] uppercase tracking-wider font-semibold text-pink-700 font-mono">Slot 04</span>
+                      <span class="text-[10px] bg-pink-100 text-pink-800 px-2 py-0.5 font-semibold rounded">Category 4</span>
+                    </div>
+
+                    <div>
+                      <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-1">Custom Title</label>
+                      <input 
+                        type="text" 
+                        id="featured-cat-title-4" 
+                        value="Little Princess Daily Wear" 
+                        placeholder="Little Princess Daily Wear"
+                        class="w-full px-3 py-2 bg-white border border-zinc-300 text-xs font-semibold focus:outline-none focus:border-zinc-950"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-zinc-200/80">
+                  <input 
+                    type="file" 
+                    id="featured-cat-file-4" 
+                    accept="image/*" 
+                    class="hidden" 
+                    onchange="Admin.handleSlotImageSelect(4, event)" 
+                  />
+                  <button 
+                    type="button" 
+                    onclick="document.getElementById('featured-cat-file-4').click()" 
+                    class="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Upload Cover</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onclick="Admin.resetSlotImage(4)" 
+                    class="px-2.5 py-1.5 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-[11px] transition-colors"
+                  >
+                    Reset Default
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -809,10 +1081,10 @@
             <button 
               type="button" 
               onclick="Admin.saveBrandingSettings(event)" 
-              id="save-branding-btn"
+              id="save-branding-btn-bottom" 
               class="btn-primary-luxury text-xs py-3.5 px-8"
             >
-              Save & Publish All Branding Changes
+              Save Branding Settings
             </button>
           </div>
 

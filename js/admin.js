@@ -10,6 +10,82 @@
  */
 
 /**
+ * compressImageFileToCanvas - Global client-side image compression engine.
+ * - Scales down large device/camera photographs (e.g. 5MB-25MB) preserving aspect ratio.
+ * - Max dimensions: 1200px (width or height).
+ * - Converts image into clean, compressed JPEG Base64 string.
+ */
+function compressImageFileToCanvas(file, maxWidth = 1200, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    try {
+      if (!file) {
+        return reject(new Error('No image file selected. Please select a valid photo.'));
+      }
+
+      const reader = new FileReader();
+      reader.onerror = (err) => {
+        console.error('[Upload Debug] FileReader error:', err);
+        reject(new Error('Failed to read image file. Please check file permissions.'));
+      };
+
+      reader.onload = (e) => {
+        try {
+          const img = new Image();
+          img.onerror = (imgErr) => {
+            console.error('[Upload Debug] Image decode error:', imgErr);
+            reject(new Error('Failed to decode image. Please choose a valid JPG, PNG, or WebP photo.'));
+          };
+          img.onload = () => {
+            try {
+              let width = img.naturalWidth || img.width;
+              let height = img.naturalHeight || img.height;
+              if (!width || !height) {
+                return reject(new Error('Invalid image dimensions.'));
+              }
+
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+              if (height > maxWidth) {
+                width = Math.round((width * maxWidth) / height);
+                height = maxWidth;
+              }
+
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                return reject(new Error('HTML5 Canvas context unavailable.'));
+              }
+
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(0, 0, width, height);
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const dataUrl = canvas.toDataURL('image/jpeg', quality);
+              resolve(dataUrl);
+            } catch (canvasErr) {
+              reject(canvasErr);
+            }
+          };
+          img.src = e.target.result;
+        } catch (loadErr) {
+          reject(loadErr);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (outerErr) {
+      reject(outerErr);
+    }
+  });
+}
+window.compressImageFileToCanvas = compressImageFileToCanvas;
+
+/**
  * ImageOptimizer - Client-side image resizing & compression engine.
  * - Scales down large device/camera photographs (e.g. 10MB-25MB) preserving aspect ratio.
  * - Prevents localStorage quota overflows while maintaining luxury editorial fidelity.
@@ -304,7 +380,7 @@ const Admin = {
       const titles = {
         dashboard: 'Atelier Dashboard',
         categories: 'The 4 Signature Categories',
-        branding: 'Brand Identity & Category Banners',
+        branding: 'Store Settings & Branding',
         products: 'Products & Designs Archive',
         orders: 'Customer Orders & Inquiries',
         settings: 'Store Settings'
@@ -993,22 +1069,41 @@ const Admin = {
   // BRANDING, LOGO & CATEGORY BANNERS CONTROLLER
   // ==========================================
 
+  pendingSiteLogo: undefined,
   pendingBrandLogo: undefined,
   pendingFavicon: undefined,
   pendingCategoryBanners: {},
+  pendingSlotImages: { 1: undefined, 2: undefined, 3: undefined, 4: undefined },
 
-  populateBrandingSettings() {
-    const settings = window.Store ? window.Store.getSettings() : (window.DEFAULT_STORE_CONFIG || {});
+  async populateBrandingSettings() {
+    let settings = window.Store ? window.Store.getSettings() : (window.DEFAULT_STORE_CONFIG || {});
     
-    // Logo
-    const logoImg = document.getElementById('branding-logo-preview');
-    if (logoImg) {
-      logoImg.src = this.pendingBrandLogo !== undefined 
-        ? (this.pendingBrandLogo || 'assets/logo.png') 
-        : (settings.brandLogo || 'assets/logo.png');
+    // Always fetch fresh settings from /api/settings on load
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const liveSettings = await res.json();
+        if (liveSettings && typeof liveSettings === 'object') {
+          settings = { ...settings, ...liveSettings };
+          if (window.Store) {
+            window.Store.settings = settings;
+            try { localStorage.setItem('eluma_settings', JSON.stringify(settings)); } catch(e){}
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Notice: using cached settings for branding form:', err);
     }
 
-    // Favicon
+    // 1. Company Logo
+    const logoImg = document.getElementById('site-logo-preview') || document.getElementById('branding-logo-preview');
+    if (logoImg) {
+      logoImg.src = this.pendingSiteLogo !== undefined 
+        ? (this.pendingSiteLogo || 'assets/logo.png') 
+        : (settings.site_logo || settings.brandLogo || 'assets/logo.png');
+    }
+
+    // 2. Favicon
     const favImg = document.getElementById('branding-favicon-preview');
     if (favImg) {
       favImg.src = this.pendingFavicon !== undefined 
@@ -1016,7 +1111,18 @@ const Admin = {
         : (settings.favicon || 'assets/favicon.ico');
     }
 
-    // Announcement
+    // 3. Store Name & Tagline
+    const storeNameInput = document.getElementById('branding-store-name') || document.getElementById('settings-store-name');
+    if (storeNameInput) {
+      storeNameInput.value = settings.storeName || 'Elumalayan Garments';
+    }
+
+    const taglineInput = document.getElementById('branding-tagline') || document.getElementById('settings-tagline');
+    if (taglineInput) {
+      taglineInput.value = settings.tagline || 'Traditional Elegance, Made for Little Princesses!';
+    }
+
+    // 4. Announcement Text & Toggle
     const annInput = document.getElementById('branding-announcement-text');
     if (annInput) {
       annInput.value = settings.announcementText || 'Elumalayan Garments — Direct Delivery Across India & Custom Orders via WhatsApp';
@@ -1024,6 +1130,53 @@ const Admin = {
     const showAnnCheck = document.getElementById('branding-show-announcement');
     if (showAnnCheck) {
       showAnnCheck.checked = settings.showAnnouncement !== false && settings.showAnnouncement !== '0';
+    }
+
+    // 5. Featured Categories 4 Slots
+    const DEFAULT_SLOT_DATA = {
+      1: {
+        title: "Traditional Pattu Pavadai",
+        image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85"
+      },
+      2: {
+        title: "Festive & Wedding Specials",
+        image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85"
+      },
+      3: {
+        title: "Aari Work & Designer Pavadai",
+        image: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85"
+      },
+      4: {
+        title: "Little Princess Daily Wear",
+        image: "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
+      }
+    };
+
+    let featuredList = [];
+    if (settings.featured_categories) {
+      try {
+        featuredList = typeof settings.featured_categories === 'string' ? JSON.parse(settings.featured_categories) : settings.featured_categories;
+      } catch (e) { featuredList = []; }
+    }
+
+    for (let slot = 1; slot <= 4; slot++) {
+      const slotDef = DEFAULT_SLOT_DATA[slot];
+      const slotFeat = featuredList[slot - 1] || {};
+
+      // Title
+      const titleInput = document.getElementById(`featured-cat-title-${slot}`);
+      if (titleInput) {
+        titleInput.value = settings[`category_${slot}_title`] || slotFeat.title || slotDef.title;
+      }
+
+      // Preview Image
+      const previewImg = document.getElementById(`featured-cat-preview-${slot}`);
+      if (previewImg) {
+        const customImg = this.pendingSlotImages[slot] !== undefined 
+          ? this.pendingSlotImages[slot]
+          : (settings[`category_${slot}_image`] || slotFeat.image);
+        previewImg.src = customImg || slotDef.image;
+      }
     }
 
     // Initialize pendingCategoryBanners if empty
@@ -1034,152 +1187,40 @@ const Admin = {
       }
       this.pendingCategoryBanners = { ...(banners || {}) };
     }
-
-    this.renderBrandingCategoryCards();
   },
 
-  renderBrandingCategoryCards() {
-    const container = document.getElementById('branding-category-cards-grid');
-    if (!container) return;
-
-    const categories = window.Store ? window.Store.getCategories() : [];
-    const allProducts = window.Store ? window.Store.getProducts() : [];
-
-    // Fallback traditional ethnic silk images
-    const FALLBACK_CATEGORY_IMAGES = {
-      "Traditional Pattu Pavadai": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
-      "Festive & Wedding Specials": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
-      "Aari Work & Designer Pavadai": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
-      "Little Princess Daily Ethnic Wear": "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
-    };
-
-    container.innerHTML = categories.map((cat, idx) => {
-      const catProducts = allProducts.filter(p => p.category && p.category.toLowerCase() === cat.name.toLowerCase());
-      
-      // Determine what image is active & its source
-      let activeImage = '';
-      let sourceBadge = '';
-
-      if (this.pendingCategoryBanners && this.pendingCategoryBanners[cat.id]) {
-        activeImage = this.pendingCategoryBanners[cat.id];
-        sourceBadge = '<span class="px-2 py-0.5 bg-pink-900 text-pink-200 text-[9px] uppercase tracking-wider font-semibold rounded">Custom Banner</span>';
-      } else if (this.pendingCategoryBanners && this.pendingCategoryBanners[cat.name]) {
-        activeImage = this.pendingCategoryBanners[cat.name];
-        sourceBadge = '<span class="px-2 py-0.5 bg-pink-900 text-pink-200 text-[9px] uppercase tracking-wider font-semibold rounded">Custom Banner</span>';
-      } else {
-        // Try latest product
-        const latestWithImg = catProducts.find(p => (Array.isArray(p.images) && p.images[0]) || p.image);
-        if (latestWithImg) {
-          activeImage = (Array.isArray(latestWithImg.images) && latestWithImg.images[0]) || latestWithImg.image;
-          sourceBadge = '<span class="px-2 py-0.5 bg-emerald-900 text-emerald-200 text-[9px] uppercase tracking-wider font-semibold rounded">Latest Product Photo</span>';
-        } else {
-          activeImage = (cat.image && !cat.image.includes('539571696357') && !cat.image.includes('591047139829'))
-            ? cat.image 
-            : (FALLBACK_CATEGORY_IMAGES[cat.name] || 'assets/logo.png');
-          sourceBadge = '<span class="px-2 py-0.5 bg-zinc-800 text-zinc-300 text-[9px] uppercase tracking-wider font-semibold rounded">Silk Fallback</span>';
-        }
-      }
-
-      return `
-        <div class="bg-zinc-50 border border-zinc-200 p-5 space-y-4 rounded-sm flex flex-col justify-between">
-          <div class="flex gap-4 items-start">
-            <div class="relative w-28 h-36 bg-zinc-200 flex-shrink-0 border border-zinc-300 overflow-hidden shadow-xs">
-              <img 
-                id="branding-cat-img-${cat.id}" 
-                src="${activeImage}" 
-                alt="${cat.name}" 
-                class="w-full h-full object-cover" 
-              />
-              <span class="absolute top-1 left-1 bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5">
-                0${idx + 1}
-              </span>
-            </div>
-
-            <div class="flex-1 min-w-0 space-y-2">
-              <div class="flex items-center justify-between gap-1 flex-wrap">
-                <span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 font-mono">${cat.slug}</span>
-                ${sourceBadge}
-              </div>
-
-              <div>
-                <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-0.5">Collection Title</label>
-                <input 
-                  type="text" 
-                  id="branding-cat-title-${cat.id}" 
-                  value="${cat.name}" 
-                  class="w-full px-2.5 py-1.5 bg-white border border-zinc-200 text-xs font-semibold focus:outline-none focus:border-zinc-900"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[10px] uppercase tracking-wider font-semibold text-zinc-700 mb-0.5">Subtitle / Weave Details</label>
-                <textarea 
-                  id="branding-cat-sub-${cat.id}" 
-                  rows="2"
-                  class="w-full px-2.5 py-1.5 bg-white border border-zinc-200 text-xs focus:outline-none focus:border-zinc-900 resize-none"
-                >${cat.subtitle || ''}</textarea>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between gap-2 pt-3 border-t border-zinc-200/80">
-            <div class="flex items-center gap-2">
-              <input 
-                type="file" 
-                id="branding-cat-file-${cat.id}" 
-                accept="image/png,image/jpeg,image/webp" 
-                class="hidden" 
-                onchange="Admin.handleCategoryBannerFileSelect('${cat.id}', event)" 
-              />
-              <button 
-                type="button" 
-                onclick="document.getElementById('branding-cat-file-${cat.id}').click()" 
-                class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1.5"
-              >
-                <svg class="w-3.5 h-3.5 stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
-                <span>Upload Cover</span>
-              </button>
-              <button 
-                type="button" 
-                onclick="Admin.clearCategoryBanner('${cat.id}')" 
-                class="px-2.5 py-1.5 border border-zinc-300 text-zinc-600 hover:text-zinc-900 text-[11px] transition-colors"
-                title="Revert to automatically pulling the newest product photo"
-              >
-                Auto Photo
-              </button>
-            </div>
-
-            <span class="text-[11px] font-mono text-zinc-500">
-              ${catProducts.length} ${catProducts.length === 1 ? 'Design' : 'Designs'}
-            </span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  },
-
-  async handleLogoFileSelect(e) {
+  async handleSiteLogoFileSelect(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     try {
-      this.showToast('Optimizing and reading brand logo...', 'info');
+      this.showToast('Compressing and loading company logo...', 'info');
       const base64 = await compressImageFileToCanvas(file, 600, 0.85);
+      this.pendingSiteLogo = base64;
       this.pendingBrandLogo = base64;
-      const preview = document.getElementById('branding-logo-preview');
+      const preview = document.getElementById('site-logo-preview') || document.getElementById('branding-logo-preview');
       if (preview) preview.src = base64;
-      this.showToast('Logo loaded. Click "Save & Publish Branding" to apply.', 'success');
+      this.showToast('Logo loaded. Click "Save Branding Settings" to publish.', 'success');
     } catch (err) {
       console.error('Logo process error:', err);
       alert('Failed to load logo: ' + err.message);
     }
   },
 
-  resetBrandLogo() {
+  resetSiteLogo() {
+    this.pendingSiteLogo = '';
     this.pendingBrandLogo = '';
-    const preview = document.getElementById('branding-logo-preview');
+    const preview = document.getElementById('site-logo-preview') || document.getElementById('branding-logo-preview');
     if (preview) preview.src = 'assets/logo.png';
-    this.showToast('Logo reset to default Poorani badge.');
+    this.showToast('Logo reset to default brand badge.');
+  },
+
+  handleLogoFileSelect(e) {
+    return this.handleSiteLogoFileSelect(e);
+  },
+
+  resetBrandLogo() {
+    return this.resetSiteLogo();
   },
 
   async handleFaviconFileSelect(e) {
@@ -1194,7 +1235,7 @@ const Admin = {
         this.pendingFavicon = base64;
         const preview = document.getElementById('branding-favicon-preview');
         if (preview) preview.src = base64;
-        this.showToast('Favicon loaded. Click "Save & Publish Branding" to apply.', 'success');
+        this.showToast('Favicon loaded. Click "Save Branding Settings" to apply.', 'success');
       };
       reader.readAsDataURL(file);
     } catch (err) {
@@ -1210,33 +1251,36 @@ const Admin = {
     this.showToast('Favicon reset to default.');
   },
 
-  async handleCategoryBannerFileSelect(catId, e) {
+  async handleSlotImageSelect(slotIndex, e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     try {
-      this.showToast('Optimizing collection banner...', 'info');
+      this.showToast(`Compressing cover photo for Slot 0${slotIndex}...`, 'info');
       const base64 = await compressImageFileToCanvas(file, 1000, 0.80);
-      if (!this.pendingCategoryBanners) this.pendingCategoryBanners = {};
-      this.pendingCategoryBanners[catId] = base64;
-      
-      const imgEl = document.getElementById(`branding-cat-img-${catId}`);
-      if (imgEl) imgEl.src = base64;
+      this.pendingSlotImages[slotIndex] = base64;
 
-      this.renderBrandingCategoryCards();
-      this.showToast('Cover loaded. Click "Save & Publish Branding" to apply.', 'success');
+      const preview = document.getElementById(`featured-cat-preview-${slotIndex}`);
+      if (preview) preview.src = base64;
+
+      this.showToast(`Slot 0${slotIndex} cover photo loaded. Click "Save Branding Settings" to apply.`, 'success');
     } catch (err) {
-      console.error('Category banner error:', err);
-      alert('Failed to load category cover: ' + err.message);
+      console.error('Slot cover error:', err);
+      alert(`Failed to load cover for Slot 0${slotIndex}: ` + err.message);
     }
   },
 
-  clearCategoryBanner(catId) {
-    if (this.pendingCategoryBanners) {
-      delete this.pendingCategoryBanners[catId];
-    }
-    this.renderBrandingCategoryCards();
-    this.showToast('Reverted to automatic latest product photo.');
+  resetSlotImage(slotIndex) {
+    this.pendingSlotImages[slotIndex] = '';
+    const DEFAULT_IMAGES = {
+      1: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+      2: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+      3: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+      4: "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
+    };
+    const preview = document.getElementById(`featured-cat-preview-${slotIndex}`);
+    if (preview) preview.src = DEFAULT_IMAGES[slotIndex] || 'assets/logo.png';
+    this.showToast(`Slot 0${slotIndex} cover reset to default.`);
   },
 
   setAnnouncementPreset(text) {
@@ -1252,69 +1296,143 @@ const Admin = {
   async saveBrandingSettings(e) {
     if (e && e.preventDefault) e.preventDefault();
 
-    const saveBtn = document.getElementById('save-branding-btn');
-    if (saveBtn) {
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = '<span class="inline-block animate-spin mr-1.5">⟳</span> Saving & Syncing...';
-    }
+    const saveBtns = [
+      document.getElementById('save-branding-btn'),
+      document.getElementById('save-branding-btn-bottom')
+    ].filter(Boolean);
+
+    saveBtns.forEach(btn => {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="inline-block animate-spin mr-1.5">⟳</span> Saving Settings...';
+    });
 
     try {
       const currentSettings = window.Store ? window.Store.getSettings() : {};
+
+      // 1. Text Fields
+      const storeName = document.getElementById('branding-store-name')
+        ? document.getElementById('branding-store-name').value.trim()
+        : (currentSettings.storeName || 'Elumalayan Garments');
+
+      const tagline = document.getElementById('branding-tagline')
+        ? document.getElementById('branding-tagline').value.trim()
+        : (currentSettings.tagline || 'Traditional Elegance, Made for Little Princesses!');
+
       const annText = document.getElementById('branding-announcement-text') 
         ? document.getElementById('branding-announcement-text').value.trim() 
-        : currentSettings.announcementText;
+        : (currentSettings.announcementText || '');
+
       const showAnn = document.getElementById('branding-show-announcement') 
         ? document.getElementById('branding-show-announcement').checked 
         : true;
 
       const payload = {
+        storeName: storeName,
+        store_name: storeName,
+        tagline: tagline,
+        store_tagline: tagline,
         announcementText: annText,
         showAnnouncement: showAnn ? '1' : '0'
       };
 
-      if (this.pendingBrandLogo !== undefined) {
+      // 2. Company Logo
+      if (this.pendingSiteLogo !== undefined) {
+        payload.site_logo = this.pendingSiteLogo;
+        payload.brandLogo = this.pendingSiteLogo;
+      } else if (this.pendingBrandLogo !== undefined) {
+        payload.site_logo = this.pendingBrandLogo;
         payload.brandLogo = this.pendingBrandLogo;
       }
+
       if (this.pendingFavicon !== undefined) {
         payload.favicon = this.pendingFavicon;
       }
-      if (this.pendingCategoryBanners) {
-        payload.categoryBanners = JSON.stringify(this.pendingCategoryBanners);
-      }
 
-      // Update Categories (Titles & Subtitles)
-      const categories = window.Store ? window.Store.getCategories() : [];
-      for (const cat of categories) {
-        const titleInput = document.getElementById(`branding-cat-title-${cat.id}`);
-        const subInput = document.getElementById(`branding-cat-sub-${cat.id}`);
-        const updatedName = titleInput ? titleInput.value.trim() : cat.name;
-        const updatedSub = subInput ? subInput.value.trim() : cat.subtitle;
-        const updatedImg = (this.pendingCategoryBanners && this.pendingCategoryBanners[cat.id]) ? this.pendingCategoryBanners[cat.id] : cat.image;
+      // 3. Featured Categories 4 Slots
+      const DEFAULT_TITLES = {
+        1: "Traditional Pattu Pavadai",
+        2: "Festive & Wedding Specials",
+        3: "Aari Work & Designer Pavadai",
+        4: "Little Princess Daily Wear"
+      };
 
-        if (updatedName !== cat.name || updatedSub !== cat.subtitle || updatedImg !== cat.image) {
-          await window.Store.updateCategory(cat.id, {
-            name: updatedName,
-            subtitle: updatedSub,
-            image: updatedImg
-          });
+      const DEFAULT_IMAGES = {
+        1: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
+        2: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
+        3: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
+        4: "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
+      };
+
+      const featuredArray = [];
+      const bannersMap = {};
+
+      for (let slot = 1; slot <= 4; slot++) {
+        const titleInput = document.getElementById(`featured-cat-title-${slot}`);
+        const slotTitle = titleInput ? titleInput.value.trim() : DEFAULT_TITLES[slot];
+
+        let slotImage = '';
+        if (this.pendingSlotImages[slot] !== undefined) {
+          slotImage = this.pendingSlotImages[slot];
+        } else if (currentSettings[`category_${slot}_image`]) {
+          slotImage = currentSettings[`category_${slot}_image`];
+        } else {
+          slotImage = DEFAULT_IMAGES[slot];
         }
+
+        payload[`category_${slot}_title`] = slotTitle;
+        payload[`category_${slot}_image`] = slotImage;
+
+        featuredArray.push({
+          slot: slot,
+          title: slotTitle,
+          image: slotImage
+        });
+
+        bannersMap[slotTitle] = slotImage;
       }
 
-      // Save settings to LocalStorage and SQLite
-      await window.Store.saveSettings(payload);
+      payload.featured_categories = JSON.stringify(featuredArray);
+      payload.categoryBanners = JSON.stringify(bannersMap);
 
-      this.showToast('Brand identity, logo & category banners saved successfully!', 'success');
-      this.populateBrandingSettings();
-      this.renderCategoriesView();
-      this.renderCategorySelectorTabs();
+      // 4. Dispatch Authenticated POST to /api/settings
+      const token = (window.Auth && window.Auth.getToken) 
+        ? window.Auth.getToken() 
+        : (localStorage.getItem('eluma_token') || localStorage.getItem('admin_token') || '');
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || errData.message || `Server responded with HTTP ${res.status}`);
+      }
+
+      const saveResult = await res.json();
+
+      // 5. Update Local Storage & In-Memory State
+      if (window.Store) {
+        await window.Store.saveSettings(payload);
+      }
+
+      this.showToast('Store settings, company logo & featured categories saved successfully!', 'success');
+      await this.populateBrandingSettings();
+      if (typeof this.renderCategoriesView === 'function') this.renderCategoriesView();
+      if (typeof this.renderCategorySelectorTabs === 'function') this.renderCategorySelectorTabs();
+
     } catch (err) {
       console.error('Branding save error:', err);
       alert('Failed to save branding settings: ' + err.message);
     } finally {
-      if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save & Publish All Branding Changes';
-      }
+      saveBtns.forEach(btn => {
+        btn.disabled = false;
+        btn.textContent = 'Save Branding Settings';
+      });
     }
   },
 
@@ -2106,32 +2224,22 @@ const Admin = {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         console.log("[Upload Debug] Compressing image index:", i, "Original size:", file.size);
-        const opt = await ImageOptimizer.compress(file, 1000, 0.78);
-        console.log("[Upload Debug] Compressed Base64 size (bytes):", opt.dataUrl.length);
-        optimizedResults.push(opt);
+        const dataUrl = await compressImageFileToCanvas(file, 1200, 0.82);
+        console.log("[Upload Debug] Compressed Base64 size (bytes):", dataUrl.length);
+        optimizedResults.push(dataUrl);
       }
 
       const startIndex = this.productImages.length;
-      optimizedResults.forEach(opt => {
+      optimizedResults.forEach(dataUrl => {
         if (this.productImages.length < 10) {
-          this.productImages.push(opt.dataUrl);
+          this.productImages.push(dataUrl);
         }
       });
 
       // Point active preview to newly added photo
       this.activePreviewIndex = startIndex < this.productImages.length ? startIndex : 0;
 
-      // Automatically sync to product if editing an existing garment
-      if (this.editingProductId) {
-        await window.Store.updateProductAsync(this.editingProductId, {
-          images: this.productImages,
-          image: this.productImages[0],
-          secondaryImage: this.productImages[1] || this.productImages[0]
-        });
-        this.renderProductsTable();
-        this.renderDashboard();
-      }
-
+      // Update gallery view in modal state (persisted when product form is saved)
       this.updateGalleryView();
 
       // Success State: replace spinner with clear preview & show small green checkmark "Photo ready"
@@ -2354,16 +2462,6 @@ const Admin = {
     this.productImages.unshift(selectedPhoto);
     this.activePreviewIndex = 0;
 
-    if (this.editingProductId) {
-      window.Store.updateProduct(this.editingProductId, {
-        images: this.productImages,
-        image: this.productImages[0],
-        secondaryImage: this.productImages[1] || this.productImages[0]
-      });
-      this.renderProductsTable();
-      this.renderDashboard();
-    }
-
     this.updateGalleryView();
     this.showToast('Photo set as primary storefront cover.', 'success');
   },
@@ -2393,16 +2491,6 @@ const Admin = {
       }
     } else {
       return;
-    }
-
-    if (this.editingProductId) {
-      window.Store.updateProduct(this.editingProductId, {
-        images: this.productImages,
-        image: this.productImages[0],
-        secondaryImage: this.productImages[1] || this.productImages[0]
-      });
-      this.renderProductsTable();
-      this.renderDashboard();
     }
 
     this.updateGalleryView();
@@ -2450,21 +2538,10 @@ const Admin = {
     this.setProductSubmitLoading(true);
 
     try {
-      const optimized = await ImageOptimizer.compress(file, 1000, 0.78);
-      console.log("[Upload Debug] Compressed Base64 size (bytes):", optimized.dataUrl.length);
+      const dataUrl = await compressImageFileToCanvas(file, 1200, 0.82);
+      console.log("[Upload Debug] Compressed Base64 size (bytes):", dataUrl.length);
 
-      this.productImages[targetIdx] = optimized.dataUrl;
-
-      if (this.editingProductId) {
-        await window.Store.updateProductAsync(this.editingProductId, {
-          images: this.productImages,
-          image: this.productImages[0],
-          secondaryImage: this.productImages[1] || this.productImages[0]
-        });
-        this.renderProductsTable();
-        this.renderDashboard();
-      }
-
+      this.productImages[targetIdx] = dataUrl;
       this.activePreviewIndex = targetIdx;
       this.updateGalleryView();
 
@@ -2494,17 +2571,6 @@ const Admin = {
       this.activePreviewIndex = Math.max(0, this.productImages.length - 1);
     }
 
-    if (this.editingProductId) {
-      const fallback = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85";
-      window.Store.updateProduct(this.editingProductId, {
-        images: this.productImages,
-        image: this.productImages[0] || fallback,
-        secondaryImage: this.productImages[1] || this.productImages[0] || fallback
-      });
-      this.renderProductsTable();
-      this.renderDashboard();
-    }
-
     this.updateGalleryView();
     this.showToast('Photograph removed from gallery.');
   },
@@ -2525,17 +2591,6 @@ const Admin = {
     if (confirm('Are you sure you want to remove all photographs from this garment?')) {
       this.productImages = [];
       this.activePreviewIndex = 0;
-
-      if (this.editingProductId) {
-        const fallback = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85";
-        window.Store.updateProduct(this.editingProductId, {
-          images: [],
-          image: fallback,
-          secondaryImage: fallback
-        });
-        this.renderProductsTable();
-        this.renderDashboard();
-      }
 
       this.updateGalleryView();
       this.showToast('All gallery photographs removed.');
@@ -2588,23 +2643,16 @@ const Admin = {
   },
 
   applyPhotoPreset(url) {
+    if (this.productImages.length >= 10) {
+      this.showToast('Maximum 10 photos reached for this garment.', 'warning');
+      return;
+    }
     this.productImages.push(url);
     this.activePreviewIndex = this.productImages.length - 1;
-
-    if (this.editingProductId) {
-      window.Store.updateProduct(this.editingProductId, {
-        images: this.productImages,
-        image: this.productImages[0],
-        secondaryImage: this.productImages[1] || this.productImages[0]
-      });
-      this.renderProductsTable();
-      this.renderDashboard();
-      this.showToast('Photoshoot preset added to garment gallery.', 'success');
-    } else {
-      this.showToast('Photoshoot preset added to gallery.');
-    }
-
     this.updateGalleryView();
+    const photoReadyBadge = document.getElementById('photo-ready-badge');
+    if (photoReadyBadge) photoReadyBadge.classList.remove('hidden');
+    this.showToast('Photoshoot preset added to gallery.', 'success');
   },
 
   renderPhotoPresets() {

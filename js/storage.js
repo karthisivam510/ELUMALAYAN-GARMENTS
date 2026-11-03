@@ -394,6 +394,10 @@ class StoreManager {
 
   getAuthToken() {
     try {
+      if (window.Auth && typeof window.Auth.getToken === 'function') {
+        const t = window.Auth.getToken();
+        if (t) return t;
+      }
       if (window.Auth && typeof window.Auth.getSession === 'function') {
         const s = window.Auth.getSession();
         if (s && s.token) return s.token;
@@ -403,6 +407,8 @@ class StoreManager {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.token) return parsed.token;
       }
+      const direct = localStorage.getItem('eluma_token') || sessionStorage.getItem('eluma_token') || localStorage.getItem('admin_token');
+      if (direct) return direct;
     } catch (e) {}
     return null;
   }

@@ -156,6 +156,11 @@ class AuthManager {
     return this.getSession() !== null;
   }
 
+  getToken() {
+    const s = this.getSession();
+    return (s && s.token) ? s.token : null;
+  }
+
   getCurrentUser() {
     const session = this.getSession();
     return session ? { username: session.username, role: session.role } : null;

@@ -210,6 +210,22 @@ const App = {
     this.cart.updateUI();
     this.initEventListeners();
 
+    // Fetch live settings directly from /api/settings on load to guarantee dynamic branding & categories
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(liveSettings => {
+        if (liveSettings && typeof liveSettings === 'object') {
+          if (window.Store) {
+            const current = window.Store.getSettings() || {};
+            window.Store.settings = { ...current, ...liveSettings };
+            try { localStorage.setItem('eluma_settings', JSON.stringify(window.Store.settings)); } catch (e) {}
+          }
+          this.applySettings();
+          this.renderMainCategories();
+        }
+      })
+      .catch(err => console.warn('Settings dynamic sync notice:', err));
+
     // Welcome Lead Capture Modal (2.5s delay for new visitors, non-intrusive)
     this.initWelcomeLeadModal();
 
@@ -247,10 +263,11 @@ const App = {
   applySettings() {
     const settings = window.Store ? window.Store.getSettings() : window.DEFAULT_STORE_CONFIG;
 
-    // Brand Logo Dynamic Update
-    if (settings.brandLogo) {
-      document.querySelectorAll('.brand-logo-img, img[src*="logo.png"], img[src*="logo-round.png"]').forEach(img => {
-        img.src = settings.brandLogo;
+    // Company Brand Logo Dynamic Update (site_logo || brandLogo)
+    const logoSrc = settings.site_logo || settings.brandLogo;
+    if (logoSrc) {
+      document.querySelectorAll('.brand-logo-img, #header-brand-logo, img[src*="logo.png"], img[src*="logo-round.png"]').forEach(img => {
+        img.src = logoSrc;
       });
     }
 
@@ -328,57 +345,102 @@ const App = {
   },
 
   // ========================================================
-  // 1. RENDER THE 4 CORE MAIN CATEGORIES (CARDS & TITLES)
-  // Dynamic Cover Image:
-  // 1) Admin custom banner
-  // 2) Latest uploaded real product photo from that category
-  // 3) Traditional silk fallback placeholder
+  // 1. RENDER THE 4 CORE MAIN CATEGORIES DYNAMICALLY
+  // Reads dynamic titles and cover photos from /api/settings:
+  // - settings.category_X_title & settings.category_X_image
+  // - settings.featured_categories array
+  // - settings.categoryBanners map
+  // - Fallback to Salem silk photography
   // ========================================================
 
   renderMainCategories() {
     const container = document.getElementById('main-categories-grid');
     if (!container) return;
 
-    const categories = window.Store ? window.Store.getCategories().filter(c => c.enabled !== false) : [];
     const allProducts = window.Store ? window.Store.getProducts() : [];
     const settings = window.Store ? window.Store.getSettings() : (window.DEFAULT_STORE_CONFIG || {});
+
+    // Parse custom banners & featured categories
+    let featuredList = [];
+    if (settings.featured_categories) {
+      try {
+        featuredList = typeof settings.featured_categories === 'string' ? JSON.parse(settings.featured_categories) : settings.featured_categories;
+      } catch (e) { featuredList = []; }
+    }
     const customBanners = (settings.categoryBanners && typeof settings.categoryBanners === 'object') ? settings.categoryBanners : {};
 
-    // Traditional Fallback Images (zero Western clothes)
-    const FALLBACK_CATEGORY_IMAGES = {
-      "Traditional Pattu Pavadai": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85",
-      "Festive & Wedding Specials": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85",
-      "Aari Work & Designer Pavadai": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85",
-      "Little Princess Daily Ethnic Wear": "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
-    };
+    const DEFAULT_SLOTS = [
+      {
+        slot: 1,
+        title: "Traditional Pattu Pavadai",
+        subtitle: "Handwoven pure silk pattu pavadai with rich zari borders & traditional motifs",
+        fallbackImage: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=85"
+      },
+      {
+        slot: 2,
+        title: "Festive & Wedding Specials",
+        subtitle: "Royal bridal & grand festive lehengas crafted for memorable celebrations",
+        fallbackImage: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=85"
+      },
+      {
+        slot: 3,
+        title: "Aari Work & Designer Pavadai",
+        subtitle: "Exquisite hand-embroidered aari, zardozi & stone embellishments",
+        fallbackImage: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=85"
+      },
+      {
+        slot: 4,
+        title: "Little Princess Daily Wear",
+        subtitle: "Comfortable, featherlight cotton-silk festive wear for young princesses",
+        fallbackImage: "https://images.unsplash.com/photo-1607823477965-095b5e32d677?auto=format&fit=crop&w=1000&q=85"
+      }
+    ];
 
-    container.innerHTML = categories.map((cat, idx) => {
-      const catProducts = allProducts.filter(p => p.category && p.category.toLowerCase() === cat.name.toLowerCase());
-      const catCount = catProducts.length;
-      const isActive = cat.name.toLowerCase() === this.activeCategory.toLowerCase();
+    const slotsData = DEFAULT_SLOTS.map((def, idx) => {
+      const slotNum = idx + 1;
+      const featItem = featuredList[idx] || {};
 
-      // Priority 1: Admin uploaded custom category banner
-      let cardImage = customBanners[cat.id] || customBanners[cat.name] || '';
+      // Title: settings.category_X_title -> featured_categories[idx].title -> default
+      const title = settings[`category_${slotNum}_title`] || featItem.title || def.title;
 
-      // Priority 2: Latest uploaded real product photo from that category
-      if (!cardImage && catProducts.length > 0) {
+      // Image: settings.category_X_image -> featured_categories[idx].image -> customBanners[title] -> latest product -> default
+      let image = settings[`category_${slotNum}_image`] || featItem.image || customBanners[title] || '';
+
+      const catProducts = allProducts.filter(p => {
+        if (!p.category) return false;
+        const pCat = p.category.toLowerCase();
+        const sTitle = title.toLowerCase();
+        return pCat === sTitle || pCat.includes(sTitle) || sTitle.includes(pCat);
+      });
+
+      if (!image && catProducts.length > 0) {
         const latestWithImg = catProducts.find(p => (Array.isArray(p.images) && p.images[0]) || p.image);
         if (latestWithImg) {
-          cardImage = (Array.isArray(latestWithImg.images) && latestWithImg.images[0]) || latestWithImg.image;
+          image = (Array.isArray(latestWithImg.images) && latestWithImg.images[0]) || latestWithImg.image;
         }
       }
 
-      // Priority 3: Category image from DB (ensure no Western coats) or silk fallback
-      const isWesternPlaceholder = cardImage && (cardImage.includes('539571696357') || cardImage.includes('591047139829') || cardImage.includes('576566588028'));
-      if (!cardImage || isWesternPlaceholder) {
-        cardImage = (cat.image && !cat.image.includes('539571696357') && !cat.image.includes('591047139829'))
-          ? cat.image 
-          : (FALLBACK_CATEGORY_IMAGES[cat.name] || 'assets/logo.png');
+      if (!image) {
+        image = def.fallbackImage;
       }
+
+      return {
+        slotNum,
+        title,
+        subtitle: def.subtitle,
+        image,
+        productCount: catProducts.length
+      };
+    });
+
+    container.innerHTML = slotsData.map((item) => {
+      const isActive = item.title.toLowerCase() === this.activeCategory.toLowerCase() ||
+                       this.activeCategory.toLowerCase().includes(item.title.toLowerCase()) ||
+                       item.title.toLowerCase().includes(this.activeCategory.toLowerCase());
 
       return `
         <div 
-          onclick="App.selectCategory('${cat.name}', true)"
+          onclick="App.selectCategory('${item.title.replace(/'/g, "\\'")}', true)"
           class="category-card group relative cursor-pointer border ${
             isActive 
               ? 'active-cat-card border-zinc-950 ring-2 ring-pink-700 bg-white' 
@@ -388,20 +450,20 @@ const App = {
           <!-- Image Container with Hover Zoom -->
           <div class="relative w-full aspect-[4/5] bg-zinc-100 overflow-hidden">
             <img 
-              src="${cardImage}" 
-              alt="${cat.name}" 
+              src="${item.image}" 
+              alt="${item.title}" 
               loading="lazy" 
-              class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+              class="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105" 
             />
             <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
 
-            <!-- Discipline Number & Design Count Pill -->
+            <!-- Slot Number & Design Count Pill -->
             <div class="absolute top-3 left-3 right-3 flex items-center justify-between">
               <span class="text-[10px] uppercase tracking-widest font-mono text-white/90 bg-black/50 backdrop-blur-md px-2 py-0.5 border border-white/20">
-                0${idx + 1}
+                0${item.slotNum}
               </span>
               <span class="text-[10px] uppercase tracking-widest font-medium text-white/90 bg-black/50 backdrop-blur-md px-2.5 py-0.5 border border-white/20">
-                ${catCount} ${catCount === 1 ? 'Design' : 'Designs'}
+                ${item.productCount} ${item.productCount === 1 ? 'Design' : 'Designs'}
               </span>
             </div>
 
@@ -418,10 +480,10 @@ const App = {
           <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between bg-white">
             <div>
               <h3 class="font-serif-editorial text-lg sm:text-xl text-zinc-900 font-semibold group-hover:text-pink-800 transition-colors">
-                ${cat.name}
+                ${item.title}
               </h3>
               <p class="text-xs text-zinc-500 font-light mt-1.5 line-clamp-2 leading-relaxed">
-                ${cat.subtitle || 'Handcrafted traditional attire by Salem master weavers.'}
+                ${item.subtitle || 'Handcrafted traditional attire by Salem master weavers.'}
               </p>
             </div>
             
